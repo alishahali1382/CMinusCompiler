@@ -1,7 +1,7 @@
 import enum
 from abc import ABC
 from io import TextIOWrapper
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Callable
 
 
 class TokenType(enum.Enum):
@@ -43,7 +43,7 @@ class IntermediateState(State):
         return self.transitions.get(input_char)
 
 class TerminalState(State):
-    def __init__(self, state_id: int, get_token_func):
+    def __init__(self, state_id: int, get_token_func: Callable[[str], Tuple[TokenType, str, bool]]):
         super().__init__(state_id)
         self.get_token = get_token_func
 
@@ -75,7 +75,6 @@ class DFA:
 class Scanner:
     def __init__(self):
         self.dfa = self.build_dfa()
-        self.input_file = None
         self.end_of_file = False
         self.lineno = 1
         self.buffered_input = None
@@ -121,7 +120,9 @@ class Scanner:
                 continue
             
             if isinstance(state, TerminalState):
-                token_type, token_string = state.get_token(self.dfa.parsed_input)
+                token_type, token_string, ignore_last = state.get_token(self.dfa.parsed_input)
+                if ignore_last:
+                    self.buffered_input = self.dfa.parsed_input[-1]
                 self.dfa.reset()
                 return token_type, token_string
 

@@ -21,7 +21,7 @@ class ErrorType(enum.Enum):
 class CharacterSet(enum.Enum):
     DIGITS = "0123456789"
     LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    WHITESPACE = " \t\n\r\f\v"
+    WHITESPACE = " \t\n\r\f\v" #TODO: using these or ascii numbers instead? chr[32]+chr[10]+chr[13]+chr[9]+chr[11]+chr[12]
     EOF = chr(0)
 
 
@@ -73,17 +73,91 @@ class DFA:
 
 
 class Scanner:
+    keywords = ["if", "else", "void", "int", "for", "break", "return", "endif"]
+    
     def __init__(self):
         self.dfa = self.build_dfa()
         self.end_of_file = False
         self.lineno = 1
         self.buffered_input = None
+        self.symbol_table = []
+        for key in Scanner.keywords:
+            self.adding_symbol_table(key)
 
     @staticmethod
     def build_dfa() -> DFA:
         start = IntermediateState(0)
         all_states = [start]
         # TODO: Add all states and transitions to the DFA
+        
+        all_states.append(TerminalState(1, Scanner.get_token_symbol_without_ignore))
+        start.add_transition(';', all_states[1])
+        all_states.append(TerminalState(2, Scanner.get_token_symbol_without_ignore))
+        start.add_transition(':', all_states[2])
+        all_states.append(TerminalState(3, Scanner.get_token_symbol_without_ignore))
+        start.add_transition(',', all_states[3])
+        all_states.append(TerminalState(4, Scanner.get_token_symbol_without_ignore))
+        start.add_transition('[', all_states[4])
+        all_states.append(TerminalState(5, Scanner.get_token_symbol_without_ignore))
+        start.add_transition(']', all_states[5])
+        all_states.append(TerminalState(6, Scanner.get_token_symbol_without_ignore))
+        start.add_transition('(', all_states[6])
+        all_states.append(TerminalState(7, Scanner.get_token_symbol_without_ignore))
+        start.add_transition(')', all_states[7])
+        all_states.append(TerminalState(8, Scanner.get_token_symbol_without_ignore))
+        start.add_transition('{', all_states[8])
+        all_states.append(TerminalState(9, Scanner.get_token_symbol_without_ignore))
+        start.add_transition('}', all_states[9])
+        all_states.append(TerminalState(10, Scanner.get_token_symbol_without_ignore))
+        start.add_transition('+', all_states[10])
+        all_states.append(TerminalState(11, Scanner.get_token_symbol_without_ignore))
+        start.add_transition('-', all_states[11])
+        all_states.append(IntermediateState(12))
+        start.add_transition('*', all_states[12])
+        all_states.append(TerminalState(13, Scanner.get_token_symbol_with_ignore))
+        all_states[12].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"[({", all_states[13])
+        all_states.append(ErrorState(14, ErrorType.UNMATCHED_COMMENT))
+        all_states[12].add_transition('/', all_states[14])
+        all_states.append(IntermediateState(15))
+        start.add_transition('=', all_states[15])
+        all_states.append(TerminalState(16, Scanner.get_token_symbol_with_ignore))
+        all_states[15].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"[({", all_states[16])
+        all_states.append(TerminalState(17, Scanner.get_token_symbol_without_ignore))
+        all_states[15].add_transition('=', all_states[17])
+        all_states.append(TerminalState(18, Scanner.get_token_symbol_without_ignore))
+        start.add_transition('<', all_states[18])
+        
+        all_states.append(IntermediateState(19))
+        start.add_transition(CharacterSet.LETTERS, all_states[19])
+        all_states[19].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS, all_states[19])
+        all_states.append(TerminalState(20, Scanner.get_token_ID))
+        all_states[19].add_transition(CharacterSet.WHITESPACE+CharacterSet.EOF+";:,+=-<*})]", all_states[20])
+        
+        all_states.append(IntermediateState(21))
+        start.add_transition(CharacterSet.DIGITS, all_states[21])
+        all_states[21].add_transition(CharacterSet.DIGITS, all_states[21])
+        all_states.append(TerminalState(22, Scanner.get_token_NUM))
+        all_states[21].add_transition(CharacterSet.WHITESPACE+CharacterSet.EOF+"/;:,[]{}()+-*=<", all_states[22])
+        all_states.append(ErrorState(23, ErrorType.INVALID_NUMBER))
+        all_states[21].add_transition(CharacterSet.LETTERS, all_states[23])
+        
+        all_states.append(IntermediateState(24))
+        start.add_transition('/', all_states[24])
+        all_states.append(IntermediateState(25))
+        all_states[24].add_transition('*', all_states[25])
+        all_states.append(IntermediateState(26))
+        all_states[25].add_transition('*', all_states[26])
+        all_states[25].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"/;:,[]{}()+-=<", all_states[25])
+        all_states[26].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"*;:,[]{}()+-=<", all_states[25])
+        all_states.append(TerminalState(27, Scanner.get_token_comment))
+        all_states[26].add_transition('/', all_states[27])
+        all_states.append(ErrorState(28, ErrorType.UNCLOSED_COMMENT))
+        all_states[25].add_transition(CharacterSet.EOF, all_states[28])
+        all_states[26].add_transition(CharacterSet.EOF, all_states[28])
+        
+        all_states.append(TerminalState(29, Scanner.get_token_whitespace))
+        start.add_transition(chr[32]+chr[10]+chr[13]+chr[9]+chr[11]+chr[12], all_states[29])
+        
         return DFA(start, all_states)
 
     def read_char(self) -> str:
@@ -100,8 +174,19 @@ class Scanner:
         return input_char
 
     def report_error(self, lineno: int, error_type: ErrorType, message: str):
+        if error_type == ErrorType.INVALID_INPUT:
+            message = message[-1] #TODO: but in some samples in doc we have the whole message
+        elif error_type == ErrorType.UNCLOSED_COMMENT:
+            if len(message) > 7:
+                message = message[:7] + "..."
+                
         print(f"Error at line {lineno}: {error_type.value} - {message}")
-        # TODO: Write error to error file
+        # TODO: Write error to error file        
+        
+    def adding_symbol_table(self, input_string: str):
+        if input_string not in self.symbol_table:
+            self.symbol_table.append(input_string)
+            #TODO: write this input_string to file with number len(self.symbol_table)
 
     def get_next_token(self) -> Tuple[TokenType, str]:
         lineno = self.lineno
@@ -121,6 +206,10 @@ class Scanner:
             
             if isinstance(state, TerminalState):
                 token_type, token_string, ignore_last = state.get_token(self.dfa.parsed_input)
+                
+                if token_type == TokenType.ID:
+                    self.adding_symbol_table(token_string)
+                
                 if ignore_last:
                     self.buffered_input = self.dfa.parsed_input[-1]
                 self.dfa.reset()
@@ -133,3 +222,24 @@ class Scanner:
             while not self.end_of_file:
                 token_type, token_string = self.get_next_token()
                 output_file.write(f"({token_type}, {token_string})\n")
+
+    def get_token_symbol_without_ignore(input_string: str) -> Tuple[str, str, bool]:
+        return (TokenType.SYMBOL, input_string, False)
+
+    def get_token_symbol_with_ignore(input_string: str) -> Tuple[str, str, bool]:
+        return (TokenType.SYMBOL, input_string[:-1], True)
+
+    def get_token_ID(input_string: str) -> Tuple[str, str, bool]:
+        if input_string[:-1] in Scanner.keywords:
+            return(TokenType.KEYWORD, input_string[:-1], True)
+        else:
+            return(TokenType.ID, input_string[:-1], True)
+        
+    def get_token_NUM(input_string: str) -> Tuple[str, str, bool]:
+        return(TokenType.NUM, input_string[:-1], True)
+    
+    def get_token_comment(input_string: str) -> Tuple[str, str, bool]:
+        return(TokenType.COMMENT, input_string, False)
+    
+    def get_token_whitespace(input_string: str) -> Tuple[str, str, bool]:
+        return(TokenType.WHITESPACE, input_string, False)

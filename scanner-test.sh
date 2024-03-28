@@ -19,4 +19,8 @@ if diff lexical_errors.txt ans/lexical_errors.txt; then
     echo "test$1 Lexical Errors: OK"
 fi
 echo =============================
-# diff symbol_table.txt ans/symbol_table.txt
+# if diff symbol_table.txt ans/symbol_table.txt; then
+#     echo "test$1 Symbol Table: OK"
+# fi
+# echo =============================
+echo

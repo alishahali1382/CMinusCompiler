@@ -92,6 +92,7 @@ def base_file_writer(filename: str):
                     file.write("\n")
                 file.write(f"{lineno}.\t")
             file.write(content)
+            file.flush()
             last_lineno = lineno
 
         yield file, write_to_file
@@ -232,15 +233,10 @@ class Scanner:
         return input_char
 
     def report_error(self, lineno: int, error_type: ErrorType, message: str):
-        # if error_type == ErrorType.INVALID_INPUT:
-        #     message = message[-1] #TODO: but in some samples in doc we have the whole message
-        if error_type == ErrorType.UNCLOSED_COMMENT:
-            if len(message) > 7:
-                message = message[:7] + "..."
+        if error_type == ErrorType.UNCLOSED_COMMENT and len(message) > 7:
+            message = message[:7] + "..."
 
         self.write_error_to_file(error_type, message, lineno)
-        # print(f"Error at line {lineno}: [{error_type.value}] {message}")
-        # TODO: Write error to error file        
         
     def adding_symbol_table(self, input_string: str):
         if input_string not in self.symbol_table:
@@ -282,3 +278,7 @@ class Scanner:
                 token_type, token_string, lineno = self.get_next_token()
                 if token_type in [TokenType.ID, TokenType.NUM, TokenType.KEYWORD, TokenType.SYMBOL]:
                     write_token_to_file(token_type, token_string, lineno)
+
+        with open("symbol_table.txt", "w") as file:
+            for i, symbol in enumerate(self.symbol_table):
+                file.write(f"{i+1}.\t{symbol}\n")

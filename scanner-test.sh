@@ -10,7 +10,6 @@ mv ans/input.txt input.txt
 
 python compiler.py
 
-# catch result of diff in an if statement
 if diff tokens.txt ans/tokens.txt; then
     echo "test$1 Tokens: OK"
 fi
@@ -19,8 +18,4 @@ if diff lexical_errors.txt ans/lexical_errors.txt; then
     echo "test$1 Lexical Errors: OK"
 fi
 echo =============================
-# if diff symbol_table.txt ans/symbol_table.txt; then
-#     echo "test$1 Symbol Table: OK"
-# fi
-# echo =============================
 echo

@@ -241,7 +241,6 @@ class Scanner:
     def adding_symbol_table(self, input_string: str):
         if input_string not in self.symbol_table:
             self.symbol_table.append(input_string)
-            #TODO: write this input_string to file with number len(self.symbol_table)
 
     def get_next_token(self) -> Tuple[TokenType, str, int]:
         lineno = self.lineno

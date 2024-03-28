@@ -79,20 +79,28 @@ class DFA:
         return next_state
 
 @contextmanager
+def base_file_writer(filename: str):
+    last_lineno = 0
+    with open(filename, "w") as file:
+        def write_to_file(content: str, lineno: int):
+            nonlocal last_lineno
+            if lineno != last_lineno:
+                if last_lineno != 0:
+                    file.write("\n")
+                file.write(f"{lineno}.\t")
+            file.write(content)
+            last_lineno = lineno
+
+        yield write_to_file
+        file.write("\n")
+
+@contextmanager
 def token_file_writer():
-    last_token_lineno = 0
-    with open("tokens.txt", "w") as tokens_file:
+    with base_file_writer("tokens.txt") as file_writer:
         def write_token_to_file(token_type: TokenType, token_string: str, lineno: int):
-            nonlocal last_token_lineno
-            if lineno != last_token_lineno:
-                if last_token_lineno != 0:
-                    tokens_file.write("\n")
-                tokens_file.write(f"{lineno}.\t")
-            tokens_file.write(f"({token_type}, {token_string}) ")
-            last_token_lineno = lineno
+            file_writer(f"({token_type}, {token_string}) ", lineno)
 
         yield write_token_to_file
-        tokens_file.write("\n")
 
 class Scanner:
     keywords = ["if", "else", "void", "int", "for", "break", "return", "endif"]
@@ -214,7 +222,7 @@ class Scanner:
         elif error_type == ErrorType.UNCLOSED_COMMENT:
             if len(message) > 7:
                 message = message[:7] + "..."
-                
+
         # print(f"Error at line {lineno}: [{error_type.value}] {message}")
         # TODO: Write error to error file        
         

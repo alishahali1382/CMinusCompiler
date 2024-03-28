@@ -1,8 +1,7 @@
 import enum
 from abc import ABC
-from io import TextIOWrapper
 from typing import Dict, List, Tuple, Callable
-
+from contextlib import contextmanager
 
 class TokenType(enum.Enum):
     NUM = 1
@@ -12,16 +11,19 @@ class TokenType(enum.Enum):
     COMMENT = 5
     WHITESPACE = 6
 
+    def __str__(self):
+        return self.name
+
 class ErrorType(enum.Enum):
     INVALID_INPUT = "Invalid input"
     UNCLOSED_COMMENT = "Unclosed comment"
     UNMATCHED_COMMENT = "Unmatched comment"
     INVALID_NUMBER = "Invalid number"
 
-class CharacterSet(enum.Enum):
+class CharacterSet:
     DIGITS = "0123456789"
     LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    WHITESPACE = " \t\n\r\f\v" #TODO: using these or ascii numbers instead? chr[32]+chr[10]+chr[13]+chr[9]+chr[11]+chr[12]
+    WHITESPACE = " \t\n\r\f\v"
     EOF = chr(0)
 
 
@@ -71,6 +73,21 @@ class DFA:
             self.current_state = next_state
         return next_state
 
+@contextmanager
+def token_file_writer():
+    last_token_lineno = 0
+    with open("tokens.txt", "w") as tokens_file:
+        def write_token_to_file(token_type: TokenType, token_string: str, lineno: int):
+            nonlocal last_token_lineno
+            if lineno != last_token_lineno:
+                if last_token_lineno != 0:
+                    tokens_file.write("\n")
+                tokens_file.write(f"{lineno}.\t")
+            tokens_file.write(f"({token_type}, {token_string}) ")
+            last_token_lineno = lineno
+
+        yield write_token_to_file
+        tokens_file.write("\n")
 
 class Scanner:
     keywords = ["if", "else", "void", "int", "for", "break", "return", "endif"]
@@ -88,7 +105,6 @@ class Scanner:
     def build_dfa() -> DFA:
         start = IntermediateState(0)
         all_states = [start]
-        # TODO: Add all states and transitions to the DFA
         
         all_states.append(TerminalState(1, Scanner.get_token_symbol_without_ignore))
         start.add_transition(';', all_states[1])
@@ -156,7 +172,7 @@ class Scanner:
         all_states[26].add_transition(CharacterSet.EOF, all_states[28])
         
         all_states.append(TerminalState(29, Scanner.get_token_whitespace))
-        start.add_transition(chr[32]+chr[10]+chr[13]+chr[9]+chr[11]+chr[12], all_states[29])
+        start.add_transition(CharacterSet.WHITESPACE, all_states[29])
         
         return DFA(start, all_states)
 
@@ -218,10 +234,11 @@ class Scanner:
         assert False, "End of file reached but no token detected"
 
     def tokenize(self):
-        with open("input.txt", "r") as self.input_file, open("tokens.txt", "w") as output_file:
+        with open("input.txt", "r") as self.input_file, token_file_writer() as write_token_to_file:
             while not self.end_of_file:
                 token_type, token_string = self.get_next_token()
-                output_file.write(f"({token_type}, {token_string})\n")
+                if token_type not in [TokenType.WHITESPACE, TokenType.COMMENT]:
+                    write_token_to_file(token_type, token_string, self.lineno)
 
     def get_token_symbol_without_ignore(input_string: str) -> Tuple[str, str, bool]:
         return (TokenType.SYMBOL, input_string, False)

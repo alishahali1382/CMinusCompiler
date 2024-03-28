@@ -10,6 +10,7 @@ class TokenType(enum.Enum):
     SYMBOL = 4
     COMMENT = 5
     WHITESPACE = 6
+    EOF = 7
 
     def __str__(self):
         return self.name
@@ -24,7 +25,9 @@ class CharacterSet:
     DIGITS = "0123456789"
     LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     WHITESPACE = " \t\n\r\f\v"
+    SYMBOLS = "/;:,[](){}+-*=<"  # NOTE: '/' is included here
     EOF = chr(0)
+    VALID_COMMENT_DATA = "".join([chr(i) for i in range(1, 256) if chr(i) not in "/*"])
 
 
 class State(ABC):
@@ -104,55 +107,62 @@ class Scanner:
     @staticmethod
     def build_dfa() -> DFA:
         start = IntermediateState(0)
-        all_states = [start]
+        all_states: List[State] = [start]
         
-        all_states.append(TerminalState(1, Scanner.get_token_symbol_without_ignore))
+        get_token_symbol_without_ignore = lambda input_string: (TokenType.SYMBOL, input_string, False)
+        get_token_symbol_with_ignore = lambda input_string: (TokenType.SYMBOL, input_string[:-1], True)
+        get_token_ID = lambda input_string: (TokenType.KEYWORD if input_string[:-1] in Scanner.keywords else TokenType.ID, input_string[:-1], True)
+        get_token_NUM = lambda input_string: (TokenType.NUM, input_string[:-1], True)
+        get_token_comment = lambda input_string: (TokenType.COMMENT, input_string, False)
+        get_token_whitespace = lambda input_string: (TokenType.WHITESPACE, input_string, False)
+        
+        all_states.append(TerminalState(1, get_token_symbol_without_ignore))
         start.add_transition(';', all_states[1])
-        all_states.append(TerminalState(2, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(2, get_token_symbol_without_ignore))
         start.add_transition(':', all_states[2])
-        all_states.append(TerminalState(3, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(3, get_token_symbol_without_ignore))
         start.add_transition(',', all_states[3])
-        all_states.append(TerminalState(4, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(4, get_token_symbol_without_ignore))
         start.add_transition('[', all_states[4])
-        all_states.append(TerminalState(5, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(5, get_token_symbol_without_ignore))
         start.add_transition(']', all_states[5])
-        all_states.append(TerminalState(6, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(6, get_token_symbol_without_ignore))
         start.add_transition('(', all_states[6])
-        all_states.append(TerminalState(7, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(7, get_token_symbol_without_ignore))
         start.add_transition(')', all_states[7])
-        all_states.append(TerminalState(8, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(8, get_token_symbol_without_ignore))
         start.add_transition('{', all_states[8])
-        all_states.append(TerminalState(9, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(9, get_token_symbol_without_ignore))
         start.add_transition('}', all_states[9])
-        all_states.append(TerminalState(10, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(10, get_token_symbol_without_ignore))
         start.add_transition('+', all_states[10])
-        all_states.append(TerminalState(11, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(11, get_token_symbol_without_ignore))
         start.add_transition('-', all_states[11])
         all_states.append(IntermediateState(12))
         start.add_transition('*', all_states[12])
-        all_states.append(TerminalState(13, Scanner.get_token_symbol_with_ignore))
+        all_states.append(TerminalState(13, get_token_symbol_with_ignore))
         all_states[12].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"[({", all_states[13])
         all_states.append(ErrorState(14, ErrorType.UNMATCHED_COMMENT))
         all_states[12].add_transition('/', all_states[14])
         all_states.append(IntermediateState(15))
         start.add_transition('=', all_states[15])
-        all_states.append(TerminalState(16, Scanner.get_token_symbol_with_ignore))
+        all_states.append(TerminalState(16, get_token_symbol_with_ignore))
         all_states[15].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"[({", all_states[16])
-        all_states.append(TerminalState(17, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(17, get_token_symbol_without_ignore))
         all_states[15].add_transition('=', all_states[17])
-        all_states.append(TerminalState(18, Scanner.get_token_symbol_without_ignore))
+        all_states.append(TerminalState(18, get_token_symbol_without_ignore))
         start.add_transition('<', all_states[18])
         
         all_states.append(IntermediateState(19))
         start.add_transition(CharacterSet.LETTERS, all_states[19])
         all_states[19].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS, all_states[19])
-        all_states.append(TerminalState(20, Scanner.get_token_ID))
-        all_states[19].add_transition(CharacterSet.WHITESPACE+CharacterSet.EOF+";:,+=-<*})]", all_states[20])
+        all_states.append(TerminalState(20, get_token_ID))
+        all_states[19].add_transition(CharacterSet.WHITESPACE+CharacterSet.EOF+CharacterSet.SYMBOLS, all_states[20])
         
         all_states.append(IntermediateState(21))
         start.add_transition(CharacterSet.DIGITS, all_states[21])
         all_states[21].add_transition(CharacterSet.DIGITS, all_states[21])
-        all_states.append(TerminalState(22, Scanner.get_token_NUM))
+        all_states.append(TerminalState(22, get_token_NUM))
         all_states[21].add_transition(CharacterSet.WHITESPACE+CharacterSet.EOF+"/;:,[]{}()+-*=<", all_states[22])
         all_states.append(ErrorState(23, ErrorType.INVALID_NUMBER))
         all_states[21].add_transition(CharacterSet.LETTERS, all_states[23])
@@ -165,14 +175,20 @@ class Scanner:
         all_states[25].add_transition('*', all_states[26])
         all_states[25].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"/;:,[]{}()+-=<", all_states[25])
         all_states[26].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"*;:,[]{}()+-=<", all_states[25])
-        all_states.append(TerminalState(27, Scanner.get_token_comment))
+        all_states.append(TerminalState(27, get_token_comment))
         all_states[26].add_transition('/', all_states[27])
         all_states.append(ErrorState(28, ErrorType.UNCLOSED_COMMENT))
         all_states[25].add_transition(CharacterSet.EOF, all_states[28])
         all_states[26].add_transition(CharacterSet.EOF, all_states[28])
         
-        all_states.append(TerminalState(29, Scanner.get_token_whitespace))
+        all_states.append(TerminalState(29, get_token_whitespace))
         start.add_transition(CharacterSet.WHITESPACE, all_states[29])
+
+        all_states.append(TerminalState(30, get_token_symbol_without_ignore))
+        
+        end = TerminalState(31, lambda x: (TokenType.EOF, "", False))
+        all_states.append(end)
+        start.add_transition(CharacterSet.EOF, end)  # self loop for EOF to handle the last token
         
         return DFA(start, all_states)
 
@@ -183,10 +199,11 @@ class Scanner:
             return input_char
         
         input_char = self.input_file.read(1)
+        if len(input_char) == 0 or input_char == CharacterSet.EOF:
+            input_char = CharacterSet.EOF
+            self.end_of_file = True
         if input_char == "\n":
             self.lineno += 1
-        if not input_char:
-            self.end_of_file = True
         return input_char
 
     def report_error(self, lineno: int, error_type: ErrorType, message: str):
@@ -196,7 +213,7 @@ class Scanner:
             if len(message) > 7:
                 message = message[:7] + "..."
                 
-        print(f"Error at line {lineno}: {error_type.value} - {message}")
+        # print(f"Error at line {lineno}: [{error_type.value}] {message}")
         # TODO: Write error to error file        
         
     def adding_symbol_table(self, input_string: str):
@@ -204,59 +221,38 @@ class Scanner:
             self.symbol_table.append(input_string)
             #TODO: write this input_string to file with number len(self.symbol_table)
 
-    def get_next_token(self) -> Tuple[TokenType, str]:
+    def get_next_token(self) -> Tuple[TokenType, str, int]:
         lineno = self.lineno
         while not self.end_of_file:
             input_char = self.read_char()
             state = self.dfa.read_input(input_char)
-            
+
             if state is None:
                 self.report_error(lineno, ErrorType.INVALID_INPUT, self.dfa.parsed_input)
                 self.dfa.reset()
                 continue
-            
+
             if isinstance(state, ErrorState):
                 self.report_error(lineno, state.error_type, self.dfa.parsed_input)
                 self.dfa.reset()
                 continue
-            
+
             if isinstance(state, TerminalState):
                 token_type, token_string, ignore_last = state.get_token(self.dfa.parsed_input)
-                
+
                 if token_type == TokenType.ID:
                     self.adding_symbol_table(token_string)
-                
+
                 if ignore_last:
                     self.buffered_input = self.dfa.parsed_input[-1]
                 self.dfa.reset()
-                return token_type, token_string
+                return token_type, token_string, lineno
 
-        assert False, "End of file reached but no token detected"
+        return TokenType.EOF, "", lineno
 
     def tokenize(self):
         with open("input.txt", "r") as self.input_file, token_file_writer() as write_token_to_file:
             while not self.end_of_file:
-                token_type, token_string = self.get_next_token()
-                if token_type not in [TokenType.WHITESPACE, TokenType.COMMENT]:
-                    write_token_to_file(token_type, token_string, self.lineno)
-
-    def get_token_symbol_without_ignore(input_string: str) -> Tuple[str, str, bool]:
-        return (TokenType.SYMBOL, input_string, False)
-
-    def get_token_symbol_with_ignore(input_string: str) -> Tuple[str, str, bool]:
-        return (TokenType.SYMBOL, input_string[:-1], True)
-
-    def get_token_ID(input_string: str) -> Tuple[str, str, bool]:
-        if input_string[:-1] in Scanner.keywords:
-            return(TokenType.KEYWORD, input_string[:-1], True)
-        else:
-            return(TokenType.ID, input_string[:-1], True)
-        
-    def get_token_NUM(input_string: str) -> Tuple[str, str, bool]:
-        return(TokenType.NUM, input_string[:-1], True)
-    
-    def get_token_comment(input_string: str) -> Tuple[str, str, bool]:
-        return(TokenType.COMMENT, input_string, False)
-    
-    def get_token_whitespace(input_string: str) -> Tuple[str, str, bool]:
-        return(TokenType.WHITESPACE, input_string, False)
+                token_type, token_string, lineno = self.get_next_token()
+                if token_type in [TokenType.ID, TokenType.NUM, TokenType.KEYWORD, TokenType.SYMBOL]:
+                    write_token_to_file(token_type, token_string, lineno)

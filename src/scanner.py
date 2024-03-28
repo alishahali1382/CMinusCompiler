@@ -26,6 +26,8 @@ class CharacterSet:
     LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     WHITESPACE = " \t\n\r\f\v"
     SYMBOLS = "/;:,[](){}+-*=<"  # NOTE: '/' is included here
+    SYMBOLS_WITHOUT_EQUAL = "/;:,[](){}+-*<"
+    ORIGIN_SYMBOLS = ";:,[](){}+-*=<"
     EOF = chr(0)
     VALID_COMMENT_DATA = "".join([chr(i) for i in range(1, 256) if chr(i) not in "/*"])
 
@@ -141,13 +143,13 @@ class Scanner:
         all_states.append(IntermediateState(12))
         start.add_transition('*', all_states[12])
         all_states.append(TerminalState(13, get_token_symbol_with_ignore))
-        all_states[12].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"[({", all_states[13])
+        all_states[12].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+CharacterSet.ORIGIN_SYMBOLS, all_states[13])
         all_states.append(ErrorState(14, ErrorType.UNMATCHED_COMMENT))
         all_states[12].add_transition('/', all_states[14])
         all_states.append(IntermediateState(15))
         start.add_transition('=', all_states[15])
         all_states.append(TerminalState(16, get_token_symbol_with_ignore))
-        all_states[15].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"[({", all_states[16])
+        all_states[15].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+CharacterSet.SYMBOLS_WITHOUT_EQUAL, all_states[16])
         all_states.append(TerminalState(17, get_token_symbol_without_ignore))
         all_states[15].add_transition('=', all_states[17])
         all_states.append(TerminalState(18, get_token_symbol_without_ignore))
@@ -163,7 +165,7 @@ class Scanner:
         start.add_transition(CharacterSet.DIGITS, all_states[21])
         all_states[21].add_transition(CharacterSet.DIGITS, all_states[21])
         all_states.append(TerminalState(22, get_token_NUM))
-        all_states[21].add_transition(CharacterSet.WHITESPACE+CharacterSet.EOF+"/;:,[]{}()+-*=<", all_states[22])
+        all_states[21].add_transition(CharacterSet.WHITESPACE+CharacterSet.EOF+CharacterSet.SYMBOLS, all_states[22])
         all_states.append(ErrorState(23, ErrorType.INVALID_NUMBER))
         all_states[21].add_transition(CharacterSet.LETTERS, all_states[23])
         
@@ -173,8 +175,8 @@ class Scanner:
         all_states[24].add_transition('*', all_states[25])
         all_states.append(IntermediateState(26))
         all_states[25].add_transition('*', all_states[26])
-        all_states[25].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"/;:,[]{}()+-=<", all_states[25])
-        all_states[26].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+"*;:,[]{}()+-=<", all_states[25])
+        all_states[25].add_transition(CharacterSet.VALID_COMMENT_DATA+"/", all_states[25])
+        all_states[26].add_transition(CharacterSet.VALID_COMMENT_DATA+"*", all_states[25])
         all_states.append(TerminalState(27, get_token_comment))
         all_states[26].add_transition('/', all_states[27])
         all_states.append(ErrorState(28, ErrorType.UNCLOSED_COMMENT))

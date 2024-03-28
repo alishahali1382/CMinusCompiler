@@ -10,8 +10,13 @@ mv ans/input.txt input.txt
 
 python compiler.py
 
-diff tokens.txt ans/tokens.txt
-# echo =============================
-# diff lexical_errors.txt ans/lexical_errors.txt
-# echo =============================
+# catch result of diff in an if statement
+if diff tokens.txt ans/tokens.txt; then
+    echo "test$1 Tokens: OK"
+fi
+echo =============================
+if diff lexical_errors.txt ans/lexical_errors.txt; then
+    echo "test$1 Lexical Errors: OK"
+fi
+echo =============================
 # diff symbol_table.txt ans/symbol_table.txt

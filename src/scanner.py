@@ -21,6 +21,9 @@ class ErrorType(enum.Enum):
     UNMATCHED_COMMENT = "Unmatched comment"
     INVALID_NUMBER = "Invalid number"
 
+    def __str__(self):
+        return self.value
+
 class CharacterSet:
     DIGITS = "0123456789"
     LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -91,20 +94,32 @@ def base_file_writer(filename: str):
             file.write(content)
             last_lineno = lineno
 
-        yield write_to_file
-        file.write("\n")
+        yield file, write_to_file
 
 @contextmanager
 def token_file_writer():
-    with base_file_writer("tokens.txt") as file_writer:
+    with base_file_writer("tokens.txt") as (file, file_writer):
         def write_token_to_file(token_type: TokenType, token_string: str, lineno: int):
             file_writer(f"({token_type}, {token_string}) ", lineno)
 
         yield write_token_to_file
+        file.write("\n")
+
+@contextmanager
+def lexical_error_file_writer():
+    no_error = True
+    with base_file_writer("lexical_errors.txt") as (file, file_writer):
+        def write_error_to_file(error_type: ErrorType, message: str, lineno: int):
+            nonlocal no_error
+            no_error = False
+            file_writer(f"({message}, {error_type}) ", lineno)
+
+        yield write_error_to_file
+        file.write("There is no lexical error." if no_error else "\n")
 
 class Scanner:
     keywords = ["if", "else", "void", "int", "for", "break", "return", "endif"]
-    
+
     def __init__(self):
         self.dfa = self.build_dfa()
         self.end_of_file = False
@@ -217,12 +232,13 @@ class Scanner:
         return input_char
 
     def report_error(self, lineno: int, error_type: ErrorType, message: str):
-        if error_type == ErrorType.INVALID_INPUT:
-            message = message[-1] #TODO: but in some samples in doc we have the whole message
-        elif error_type == ErrorType.UNCLOSED_COMMENT:
+        # if error_type == ErrorType.INVALID_INPUT:
+        #     message = message[-1] #TODO: but in some samples in doc we have the whole message
+        if error_type == ErrorType.UNCLOSED_COMMENT:
             if len(message) > 7:
                 message = message[:7] + "..."
 
+        self.write_error_to_file(error_type, message, lineno)
         # print(f"Error at line {lineno}: [{error_type.value}] {message}")
         # TODO: Write error to error file        
         
@@ -261,7 +277,7 @@ class Scanner:
         return TokenType.EOF, "", lineno
 
     def tokenize(self):
-        with open("input.txt", "r") as self.input_file, token_file_writer() as write_token_to_file:
+        with open("input.txt", "r") as self.input_file, token_file_writer() as write_token_to_file, lexical_error_file_writer() as self.write_error_to_file:
             while not self.end_of_file:
                 token_type, token_string, lineno = self.get_next_token()
                 if token_type in [TokenType.ID, TokenType.NUM, TokenType.KEYWORD, TokenType.SYMBOL]:

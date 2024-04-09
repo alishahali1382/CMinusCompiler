@@ -33,6 +33,9 @@ class CharacterSet:
     ORIGIN_SYMBOLS = ";:,[](){}+-*=<"
     EOF = chr(0)
     VALID_COMMENT_DATA = "".join([chr(i) for i in range(1, 256) if chr(i) not in "/*"])
+    VALID_OTHER_STAR = "".join([chr(i) for i in range(0, 256) if chr(i) not in "/"])
+    VALID_OTHER_EQUAL = "".join([chr(i) for i in range(0, 256) if chr(i) not in "=s"])
+    VALID_OTHER = "".join([chr(i) for i in range(0, 256) if chr(i) not in "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"]) #maybe not needed!
 
 
 class State(ABC):
@@ -167,13 +170,13 @@ class Scanner:
         all_states.append(IntermediateState(12))
         start.add_transition('*', all_states[12])
         all_states.append(TerminalState(13, get_token_symbol_with_ignore))
-        all_states[12].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+CharacterSet.ORIGIN_SYMBOLS, all_states[13])
+        all_states[12].add_transition(CharacterSet.VALID_OTHER_STAR, all_states[13])
         all_states.append(ErrorState(14, ErrorType.UNMATCHED_COMMENT))
         all_states[12].add_transition('/', all_states[14])
         all_states.append(IntermediateState(15))
         start.add_transition('=', all_states[15])
         all_states.append(TerminalState(16, get_token_symbol_with_ignore))
-        all_states[15].add_transition(CharacterSet.DIGITS+CharacterSet.LETTERS+CharacterSet.WHITESPACE+CharacterSet.SYMBOLS_WITHOUT_EQUAL, all_states[16])
+        all_states[15].add_transition(CharacterSet.VALID_OTHER_EQUAL, all_states[16])
         all_states.append(TerminalState(17, get_token_symbol_without_ignore))
         all_states[15].add_transition('=', all_states[17])
         all_states.append(TerminalState(18, get_token_symbol_without_ignore))
@@ -189,7 +192,7 @@ class Scanner:
         start.add_transition(CharacterSet.DIGITS, all_states[21])
         all_states[21].add_transition(CharacterSet.DIGITS, all_states[21])
         all_states.append(TerminalState(22, get_token_NUM))
-        all_states[21].add_transition(CharacterSet.WHITESPACE+CharacterSet.EOF+CharacterSet.SYMBOLS, all_states[22])
+        all_states[21].add_transition(CharacterSet.VALID_OTHER, all_states[22])
         all_states.append(ErrorState(23, ErrorType.INVALID_NUMBER))
         all_states[21].add_transition(CharacterSet.LETTERS, all_states[23])
         

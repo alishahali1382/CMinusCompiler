@@ -1,7 +1,8 @@
 import enum
 from abc import ABC
 from typing import Dict, List, Tuple, Callable
-from contextlib import contextmanager
+
+from file_writers import token_file_writer, lexical_error_file_writer
 
 class TokenType(enum.Enum):
     NUM = 1
@@ -14,6 +15,14 @@ class TokenType(enum.Enum):
 
     def __str__(self):
         return self.name
+
+class Token:
+    def __init__(self, token_type: TokenType, token_string: str):
+        self.token_type = token_type
+        self.token_string = token_string
+
+    def __str__(self):
+        return f"({self.token_type}, {self.token_string})"
 
 class ErrorType(enum.Enum):
     INVALID_INPUT = "Invalid input"
@@ -84,42 +93,6 @@ class DFA:
             self.current_state = next_state
         return next_state
 
-@contextmanager
-def base_file_writer(filename: str):
-    last_lineno = 0
-    with open(filename, "w") as file:
-        def write_to_file(content: str, lineno: int):
-            nonlocal last_lineno
-            if lineno != last_lineno:
-                if last_lineno != 0:
-                    file.write("\n")
-                file.write(f"{lineno}.\t")
-            file.write(content)
-            file.flush()
-            last_lineno = lineno
-
-        yield file, write_to_file
-
-@contextmanager
-def token_file_writer():
-    with base_file_writer("tokens.txt") as (file, file_writer):
-        def write_token_to_file(token_type: TokenType, token_string: str, lineno: int):
-            file_writer(f"({token_type}, {token_string}) ", lineno)
-
-        yield write_token_to_file
-        file.write("\n")
-
-@contextmanager
-def lexical_error_file_writer():
-    no_error = True
-    with base_file_writer("lexical_errors.txt") as (file, file_writer):
-        def write_error_to_file(error_type: ErrorType, message: str, lineno: int):
-            nonlocal no_error
-            no_error = False
-            file_writer(f"({message}, {error_type}) ", lineno)
-
-        yield write_error_to_file
-        file.write("There is no lexical error." if no_error else "\n")
 
 class Scanner:
     keywords = ["if", "else", "void", "int", "for", "break", "return", "endif"]
@@ -245,7 +218,7 @@ class Scanner:
         if input_string not in self.symbol_table:
             self.symbol_table.append(input_string)
 
-    def get_next_token(self) -> Tuple[TokenType, str, int]:
+    def get_next_token(self) -> Tuple[Token, int]:
         lineno = self.lineno
         while not self.end_of_file:
             input_char = self.read_char()
@@ -270,16 +243,16 @@ class Scanner:
                 if ignore_last:
                     self.buffered_input = self.dfa.parsed_input[-1]
                 self.dfa.reset()
-                return token_type, token_string, lineno
+                return Token(token_type, token_string), lineno
 
-        return TokenType.EOF, "", lineno
+        return Token(TokenType.EOF, ""), lineno
 
     def tokenize(self):
         with open("input.txt", "r") as self.input_file, token_file_writer() as write_token_to_file, lexical_error_file_writer() as self.write_error_to_file:
             while not self.end_of_file:
-                token_type, token_string, lineno = self.get_next_token()
-                if token_type in [TokenType.ID, TokenType.NUM, TokenType.KEYWORD, TokenType.SYMBOL]:
-                    write_token_to_file(token_type, token_string, lineno)
+                token, lineno = self.get_next_token()
+                if token.token_type in [TokenType.ID, TokenType.NUM, TokenType.KEYWORD, TokenType.SYMBOL]:
+                    write_token_to_file(token, lineno)
 
         with open("symbol_table.txt", "w") as file:
             for i, symbol in enumerate(self.symbol_table):

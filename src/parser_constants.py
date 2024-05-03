@@ -108,7 +108,7 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Declaration_prime, [NonTerminal.Fun_declaration_prime]),
     (NonTerminal.Declaration_prime, [NonTerminal.Var_declaration_prime]),
     (NonTerminal.Var_declaration_prime, [Terminal.SEMICOLON]),
-    (NonTerminal.Var_declaration_prime, [Terminal.BARCKET_OPEN, Terminal.NUM, Terminal.BARCKET_CLOSE, Terminal.SEMICOLON]),
+    (NonTerminal.Var_declaration_prime, [Terminal.BRACKET_OPEN, Terminal.NUM, Terminal.BRACKET_CLOSE, Terminal.SEMICOLON]),
     (NonTerminal.Fun_declaration_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Params, Terminal.PARAENTHESIS_CLOSE, NonTerminal.Compound_stmt]),
     (NonTerminal.Type_specifier, [Terminal.INT]),
     (NonTerminal.Type_specifier, [Terminal.VOID]),
@@ -117,7 +117,7 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Param_list, [Terminal.COMMA, NonTerminal.Param, NonTerminal.Param_list]),
     (NonTerminal.Param_list, [Terminal.EPSILON]),
     (NonTerminal.Param, [NonTerminal.Declaration_initial, NonTerminal.Param_prime]),
-    (NonTerminal.Param_prime, [Terminal.BARCKET_OPEN, Terminal.BARCKET_CLOSE]),
+    (NonTerminal.Param_prime, [Terminal.BRACKET_OPEN, Terminal.BRACKET_CLOSE]),
     (NonTerminal.Param_prime, [Terminal.EPSILON]),
     (NonTerminal.Compound_stmt, [Terminal.BRACE_OPEN, NonTerminal.Declaration_list, NonTerminal.Statement_list, Terminal.BRACE_CLOSE]),
     (NonTerminal.Statement_list, [NonTerminal.Statement, NonTerminal.Statement_list]),
@@ -183,6 +183,6 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Args, [NonTerminal.Arg_list]),
     (NonTerminal.Args, [Terminal.EPSILON]),
     (NonTerminal.Arg_list, [NonTerminal.Expression, NonTerminal.Arg_list_prime]),
-    (NonTerminal.Arg_list_prime, [Terminal.COMMA, NonTerminal.Expression, NonTerminal.Arg_list_prime])
+    (NonTerminal.Arg_list_prime, [Terminal.COMMA, NonTerminal.Expression, NonTerminal.Arg_list_prime]),
     (NonTerminal.Arg_list_prime, [Terminal.EPSILON]),
 ]

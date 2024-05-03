@@ -4,13 +4,13 @@ from parser_constants import *
 
 
 class FirstFollowCalculator:
-    def __init__(self, rules: List[GRAMMER_RULE]):
+    def __init__(self, rules: List[GRAMMAR_RULE]):
         self.rules = rules
         self.first_sets: Dict[NonTerminal, Set[Terminal]] = {non_terminal: set() for non_terminal, _ in rules}
         self.follow_sets: Dict[NonTerminal, Set[Terminal]] = {non_terminal: set() for non_terminal, _ in rules}
         self.predict_sets = {}
 
-    def collect_set(self, initial_set: Set[Terminal], items: GRAMMER_RHS, additional_set: Set[Terminal]) -> Set[Terminal]:
+    def collect_set(self, initial_set: Set[Terminal], items: GRAMMAR_RHS, additional_set: Set[Terminal]) -> Set[Terminal]:
         result = initial_set
         eps = False
 
@@ -84,8 +84,7 @@ class FirstFollowCalculator:
 
 
 if __name__ == '__main__':
-    from prd_parser import grammer_rules as rules
-    calculator = FirstFollowCalculator(rules)
+    calculator = FirstFollowCalculator(grammar_rules)
     calculator.calculate_first_sets()
     calculator.calculate_follow_sets()
     calculator.calculate_predict_sets()

@@ -186,3 +186,10 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Arg_list_prime, [Terminal.COMMA, NonTerminal.Expression, NonTerminal.Arg_list_prime]),
     (NonTerminal.Arg_list_prime, [Terminal.EPSILON]),
 ]
+
+
+if __name__ == '__main__':
+    from itertools import groupby
+    grouped = groupby(grammar_rules, lambda x: x[0])
+    for i, (non_terminal, rules) in enumerate(grouped, 1):
+        print(f"{i}. {non_terminal} ->", " | ".join(" ".join(str(x) for x in rhs) for _, rhs in rules))

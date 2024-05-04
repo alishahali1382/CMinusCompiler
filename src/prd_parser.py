@@ -46,6 +46,10 @@ class Parser:
             self.lookahead = next(self.token_generator)
         return self.lookahead
 
+    @staticmethod
+    def getNode(non_terminal: NonTerminal, children: List[Optional[anytree.Node]]) -> anytree.Node:
+        return anytree.Node(str(non_terminal), children=[child for child in children if child is not None])
+
     def match_procedure(self, terminal: Terminal) -> Optional[anytree.Node]:
         # TODO
         lookahead = self.get_lookahead()
@@ -75,8 +79,8 @@ class Parser:
                         children.append(self.procedures[symbol]())  # Call NonTerminal procedure
                     else:
                         children.append(self.match_procedure(symbol))  # Match Terminal
-                return anytree.Node(str(non_terminal), children=children)
-            
+                return self.getNode(non_terminal, children=children)
+
             if lookahead in self.follow_sets[non_terminal]:
                 print(f"Syntax error at line {self.get_lookahead_token()[1]}: missing {non_terminal}")
                 return None

@@ -8,7 +8,7 @@ class FirstFollowCalculator:
         self.rules = rules
         self.first_sets: Dict[NonTerminal, Set[Terminal]] = {non_terminal: set() for non_terminal, _ in rules}
         self.follow_sets: Dict[NonTerminal, Set[Terminal]] = {non_terminal: set() for non_terminal, _ in rules}
-        self.predict_sets = {}
+        self.predict_sets: List[Set[Terminal]] = []
 
     def collect_set(self, initial_set: Set[Terminal], items: GRAMMAR_RHS, additional_set: Set[Terminal]) -> Set[Terminal]:
         result = initial_set
@@ -43,6 +43,7 @@ class FirstFollowCalculator:
                 if len(self.first_sets[left]) != len(new_set):
                     self.first_sets[left] = new_set
                     changed = True
+        return self.first_sets
 
     def calculate_follow_sets(self):
         self.follow_sets[self.rules[0][0]].add(EOF)
@@ -67,6 +68,7 @@ class FirstFollowCalculator:
                     if len(self.follow_sets[item]) != len(updated_set):
                         self.follow_sets[item] = updated_set
                         changed = True
+        return self.follow_sets
 
     def calculate_predict_sets(self):
         for rule_index, (left, right) in enumerate(self.rules):
@@ -79,7 +81,9 @@ class FirstFollowCalculator:
             else:
                 set_accum.add(right[0])
 
-            self.predict_sets[rule_index + 1] = set_accum
+            self.predict_sets.append(set_accum)
+
+        return self.predict_sets
 
 
 

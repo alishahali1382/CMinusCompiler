@@ -93,6 +93,20 @@ class Terminal(enum.Enum):
     def __repr__(self):
         return rf"'{self.value}'"
 
+    @staticmethod
+    def from_str(s: str):
+        for terminal in Terminal:
+            if terminal.value == s:
+                return terminal
+        assert 0, f"Terminal with value {s} not found"
+
+    @staticmethod
+    def with_name(name: str):
+        for terminal in Terminal:
+            if terminal.name == name:
+                return terminal
+        assert 0, f"Terminal with name {name} not found"
+
 GRAMMAR_RHS = List[Union[NonTerminal, Terminal]]
 GRAMMAR_RULE = Tuple[NonTerminal, GRAMMAR_RHS]
 EPSILON = Terminal.EPSILON
@@ -100,7 +114,7 @@ EOF = Terminal.EOF
 
 
 grammar_rules: List[GRAMMAR_RULE] = [
-    (NonTerminal.Program, [NonTerminal.Declaration_list]),
+    (NonTerminal.Program, [NonTerminal.Declaration_list, Terminal.EOF]),
     (NonTerminal.Declaration_list, [NonTerminal.Declaration, NonTerminal.Declaration_list]),
     (NonTerminal.Declaration_list, [Terminal.EPSILON]),
     (NonTerminal.Declaration, [NonTerminal.Declaration_initial, NonTerminal.Declaration_prime]),

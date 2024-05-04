@@ -8,4 +8,5 @@ from prd_parser import Parser
 
 parser = Parser(grammar_rules)
 node = parser.parse()
-print(anytree.RenderTree(node).by_attr())
+with open("parse_tree.txt", "w") as f:
+    f.write(anytree.RenderTree(node).by_attr())

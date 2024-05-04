@@ -1,8 +1,9 @@
 import enum
 from abc import ABC
-from typing import Dict, List, Tuple, Callable
+from typing import Callable, Dict, List, Tuple
 
-from file_writers import token_file_writer, lexical_error_file_writer
+from file_writers import lexical_error_file_writer, token_file_writer
+
 
 class TokenType(enum.Enum):
     NUM = 1
@@ -23,6 +24,9 @@ class Token:
 
     def __str__(self):
         return f"({self.token_type}, {self.token_string})"
+
+    def __repr__(self):
+        return str(self)
 
 class ErrorType(enum.Enum):
     INVALID_INPUT = "Invalid input"
@@ -97,7 +101,8 @@ class DFA:
 class Scanner:
     keywords = ["if", "else", "void", "int", "for", "break", "return", "endif"]
 
-    def __init__(self):
+    def __init__(self, ignore_errors = False):
+        self.ignore_errors = ignore_errors
         self.dfa = self.build_dfa()
         self.end_of_file = False
         self.lineno = 1
@@ -209,6 +214,8 @@ class Scanner:
         return input_char
 
     def report_error(self, lineno: int, error_type: ErrorType, message: str):
+        if self.ignore_errors:
+            return
         if error_type == ErrorType.UNCLOSED_COMMENT and len(message) > 7:
             message = message[:7] + "..."
 

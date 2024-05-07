@@ -15,4 +15,8 @@ if diff parse_tree.txt ans/parse_tree.txt; then
     echo "test$1 Parse Tree: OK"
 fi
 echo =============================
+if diff syntax_errors.txt ans/syntax_errors.txt; then
+    echo "test$1 Syntax Errors: OK"
+fi
+echo =============================
 echo

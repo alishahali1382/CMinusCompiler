@@ -39,13 +39,16 @@ def lexical_error_file_writer():
         yield write_error_to_file
         file.write("There is no lexical error." if no_error else "\n")
 
+@contextmanager
 def syntax_error_file_writer():
     no_error = True
     with open("syntax_errors.txt", "w") as file:
         def report_syntax_error(message: str, lineno: int):
             nonlocal no_error
+            if not no_error:
+                file.write("\n")
             no_error = False
-            file.write(f"#{lineno}: syntax error, {message}\n")
+            file.write(f"#{lineno} : syntax error, {message}")
 
         yield report_syntax_error
-        file.write("There is no syntax error." if no_error else "\n")
+        file.write("There is no syntax error." if no_error else "")

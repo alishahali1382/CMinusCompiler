@@ -114,7 +114,7 @@ EOF = Terminal.EOF
 
 
 grammar_rules: List[GRAMMAR_RULE] = [
-    (NonTerminal.Program, [NonTerminal.Declaration_list, Terminal.EOF]),
+    (NonTerminal.Program, [NonTerminal.Declaration_list]),
     (NonTerminal.Declaration_list, [NonTerminal.Declaration, NonTerminal.Declaration_list]),
     (NonTerminal.Declaration_list, [Terminal.EPSILON]),
     (NonTerminal.Declaration, [NonTerminal.Declaration_initial, NonTerminal.Declaration_prime]),

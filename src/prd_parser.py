@@ -31,6 +31,8 @@ class Parser:
         self.follow_sets = first_follow_calculator.calculate_follow_sets()
         self.predict_sets = first_follow_calculator.calculate_predict_sets()
         
+        self.rules[0][1].append(Terminal.EOF)
+        
         for non_terminal in NonTerminal:
             self.procedures[non_terminal] = self.create_procedure(non_terminal)
 
@@ -79,8 +81,13 @@ class Parser:
             self.discard_lookahead()
             return anytree.Node(str(token))
 
+        if terminal == Terminal.EOF:
+            if lookahead != terminal:
+                self.discard_lookahead()
+                return self.match_procedure(terminal)
+            
         self.error(f"missing {terminal}", lineno)
-        self.discard_lookahead()
+        #self.discard_lookahead()
         # return self.match_procedure(terminal)
         return None
 
@@ -106,7 +113,12 @@ class Parser:
 
             if lookahead in self.follow_sets[non_terminal]:
                 self.error(f"missing {non_terminal}", self.get_lookahead_token()[1])
+                #self.discard_lookahead()
                 return None
+            if lookahead == Terminal.EOF:
+                self.error(f"Unexpected EOF", self.get_lookahead_token()[1])
+                self.discard_lookahead()
+                return procedure()
             self.error(f"illegal {lookahead}", self.get_lookahead_token()[1])
             self.discard_lookahead()
             return procedure()

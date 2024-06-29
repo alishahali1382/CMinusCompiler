@@ -153,53 +153,53 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Return_stmt_prime, [Terminal.SEMICOLON]),
     (NonTerminal.Return_stmt_prime, [NonTerminal.Expression, Terminal.SEMICOLON]),
     (NonTerminal.Expression, [NonTerminal.Simple_expression_zegond]),
-    (NonTerminal.Expression, [Terminal.ID, NonTerminal.B]),
-    (NonTerminal.B, [Terminal.EQUAL, NonTerminal.Expression]),
+    (NonTerminal.Expression, [Terminal.ID, SemanticRoutine.PID, NonTerminal.B]),
+    (NonTerminal.B, [Terminal.EQUAL, NonTerminal.Expression, SemanticRoutine.PID_ASSIGN]), # OK
     (NonTerminal.B, [Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, NonTerminal.H]),
-    (NonTerminal.B, [NonTerminal.Simple_expression_prime]),
+    (NonTerminal.B, [NonTerminal.Simple_expression_prime]), # OK
     (NonTerminal.H, [Terminal.EQUAL, NonTerminal.Expression]),
     (NonTerminal.H, [NonTerminal.G, NonTerminal.D, NonTerminal.C]),
     (NonTerminal.Simple_expression_zegond, [NonTerminal.Additive_expression_zegond, NonTerminal.C]),
     (NonTerminal.Simple_expression_prime, [NonTerminal.Additive_expression_prime, NonTerminal.C]),
-    (NonTerminal.C, [NonTerminal.Relop, NonTerminal.Additive_expression]),
-    (NonTerminal.C, [Terminal.EPSILON]),
-    (NonTerminal.Relop, [Terminal.GREATER]),
-    (NonTerminal.Relop, [Terminal.DOUBLE_EQUAL]),
+    (NonTerminal.C, [NonTerminal.Relop, NonTerminal.Additive_expression, SemanticRoutine.DO_RELOP]), # OK
+    (NonTerminal.C, [Terminal.EPSILON]), # OK
+    (NonTerminal.Relop, [Terminal.GREATER, SemanticRoutine.PUSH_RELOP_GREATER]), # OK
+    (NonTerminal.Relop, [Terminal.DOUBLE_EQUAL, SemanticRoutine.PUSH_RELOP_EQUAL]), # OK
     (NonTerminal.Additive_expression, [NonTerminal.Term, NonTerminal.D]),
     (NonTerminal.Additive_expression_prime, [NonTerminal.Term_prime, NonTerminal.D]),
     (NonTerminal.Additive_expression_zegond, [NonTerminal.Term_zegond, NonTerminal.D]),
-    (NonTerminal.D, [NonTerminal.Addop, NonTerminal.Term, NonTerminal.D]),
+    (NonTerminal.D, [NonTerminal.Addop, NonTerminal.Term, SemanticRoutine.DO_ADDOP, NonTerminal.D]),
     (NonTerminal.D, [Terminal.EPSILON]),
-    (NonTerminal.Addop, [Terminal.PLUS]),
-    (NonTerminal.Addop, [Terminal.MINUS]),
+    (NonTerminal.Addop, [Terminal.PLUS, SemanticRoutine.PUSH_PLUS]),
+    (NonTerminal.Addop, [Terminal.MINUS, SemanticRoutine.PUSH_MINUS]),
     (NonTerminal.Term, [NonTerminal.Signed_factor, NonTerminal.G]),
     (NonTerminal.Term_prime, [NonTerminal.Signed_factor_prime, NonTerminal.G]),
     (NonTerminal.Term_zegond, [NonTerminal.Signed_factor_zegond, NonTerminal.G]),
-    (NonTerminal.G, [Terminal.STAR, NonTerminal.Signed_factor, NonTerminal.G]),
-    (NonTerminal.G, [Terminal.EPSILON]),
-    (NonTerminal.Signed_factor, [Terminal.PLUS, NonTerminal.Factor]),
-    (NonTerminal.Signed_factor, [Terminal.MINUS, NonTerminal.Factor]),
-    (NonTerminal.Signed_factor, [NonTerminal.Factor]),
+    (NonTerminal.G, [Terminal.STAR, NonTerminal.Signed_factor, SemanticRoutine.DO_MULTIPLY, NonTerminal.G]), # OK
+    (NonTerminal.G, [Terminal.EPSILON]), # OK
+    (NonTerminal.Signed_factor, [Terminal.PLUS, NonTerminal.Factor]), # OK
+    (NonTerminal.Signed_factor, [Terminal.MINUS, NonTerminal.Factor, SemanticRoutine.NEGATE_SS_TOP]), # OK
+    (NonTerminal.Signed_factor, [NonTerminal.Factor]), # OK
     (NonTerminal.Signed_factor_prime, [NonTerminal.Factor_prime]),
-    (NonTerminal.Signed_factor_zegond, [Terminal.PLUS, NonTerminal.Factor]),
-    (NonTerminal.Signed_factor_zegond, [Terminal.MINUS, NonTerminal.Factor]),
+    (NonTerminal.Signed_factor_zegond, [Terminal.PLUS, NonTerminal.Factor]), # OK
+    (NonTerminal.Signed_factor_zegond, [Terminal.MINUS, NonTerminal.Factor, SemanticRoutine.NEGATE_SS_TOP]), # OK
     (NonTerminal.Signed_factor_zegond, [NonTerminal.Factor_zegond]),
-    (NonTerminal.Factor, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE]),
+    (NonTerminal.Factor, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE]), # OK
     (NonTerminal.Factor, [Terminal.ID, NonTerminal.Var_call_prime]),
-    (NonTerminal.Factor, [Terminal.NUM]),
-    (NonTerminal.Var_call_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE]),
+    (NonTerminal.Factor, [Terminal.NUM, SemanticRoutine.PNUM]), # OK
+    (NonTerminal.Var_call_prime, [SemanticRoutine.SA_BEGIN_FUNCTION_CALL, Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_END_FUNCTION_CALL]), # OK
     (NonTerminal.Var_call_prime, [NonTerminal.Var_prime]),
     (NonTerminal.Var_prime, [Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE]),
-    (NonTerminal.Var_prime, [Terminal.EPSILON]),
-    (NonTerminal.Factor_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE]),
+    (NonTerminal.Var_prime, [Terminal.EPSILON, SemanticRoutine.PID]), # OK
+    (NonTerminal.Factor_prime, [SemanticRoutine.SA_BEGIN_FUNCTION_CALL, Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_END_FUNCTION_CALL]), # OK
     (NonTerminal.Factor_prime, [Terminal.EPSILON]),
-    (NonTerminal.Factor_zegond, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE]),
-    (NonTerminal.Factor_zegond, [Terminal.NUM]),
-    (NonTerminal.Args, [NonTerminal.Arg_list]),
-    (NonTerminal.Args, [Terminal.EPSILON]),
-    (NonTerminal.Arg_list, [NonTerminal.Expression, NonTerminal.Arg_list_prime]),
-    (NonTerminal.Arg_list_prime, [Terminal.COMMA, NonTerminal.Expression, NonTerminal.Arg_list_prime]),
-    (NonTerminal.Arg_list_prime, [Terminal.EPSILON]),
+    (NonTerminal.Factor_zegond, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE]), # OK
+    (NonTerminal.Factor_zegond, [Terminal.NUM, SemanticRoutine.PNUM]), # OK
+    (NonTerminal.Args, [NonTerminal.Arg_list]), # OK
+    (NonTerminal.Args, [Terminal.EPSILON]), # OK
+    (NonTerminal.Arg_list, [NonTerminal.Expression, NonTerminal.Arg_list_prime]), # OK
+    (NonTerminal.Arg_list_prime, [Terminal.COMMA, NonTerminal.Expression, NonTerminal.Arg_list_prime]), # OK
+    (NonTerminal.Arg_list_prime, [Terminal.EPSILON]), # OK
 ]
 
 

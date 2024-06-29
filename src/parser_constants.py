@@ -1,5 +1,6 @@
 import enum
 from typing import List, Tuple, Union
+from code_gen import SemanticRoutine
 
 __all__ = ['NonTerminal', 'Terminal', 'GRAMMAR_RHS', 'GRAMMAR_RULE', 'EPSILON', 'EOF', 'grammar_rules']
 
@@ -118,14 +119,14 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Declaration_list, [NonTerminal.Declaration, NonTerminal.Declaration_list]),
     (NonTerminal.Declaration_list, [Terminal.EPSILON]),
     (NonTerminal.Declaration, [NonTerminal.Declaration_initial, NonTerminal.Declaration_prime]),
-    (NonTerminal.Declaration_initial, [NonTerminal.Type_specifier, Terminal.ID]),
-    (NonTerminal.Declaration_prime, [NonTerminal.Fun_declaration_prime]),
+    (NonTerminal.Declaration_initial, [SemanticRoutine.SA_BEGIN_DECLERATION, NonTerminal.Type_specifier, Terminal.ID, SemanticRoutine.SA_ASSIGN_NAME]),
+    (NonTerminal.Declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_FUNCTION, NonTerminal.Fun_declaration_prime]),
     (NonTerminal.Declaration_prime, [NonTerminal.Var_declaration_prime]),
-    (NonTerminal.Var_declaration_prime, [Terminal.SEMICOLON]),
-    (NonTerminal.Var_declaration_prime, [Terminal.BRACKET_OPEN, Terminal.NUM, Terminal.BRACKET_CLOSE, Terminal.SEMICOLON]),
-    (NonTerminal.Fun_declaration_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Params, Terminal.PARAENTHESIS_CLOSE, NonTerminal.Compound_stmt]),
-    (NonTerminal.Type_specifier, [Terminal.INT]),
-    (NonTerminal.Type_specifier, [Terminal.VOID]),
+    (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_VARIABLE, Terminal.SEMICOLON]),
+    (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.NUM, Terminal.BRACKET_CLOSE, Terminal.SEMICOLON]),
+    (NonTerminal.Fun_declaration_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Params, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_BEGIN_FUNCTION_STATEMENT, NonTerminal.Compound_stmt]), # TODO: add something to the end that returns to the caller, except for main
+    (NonTerminal.Type_specifier, [Terminal.INT, SemanticRoutine.SA_TYPE_SPECIFIER_INT]),
+    (NonTerminal.Type_specifier, [Terminal.VOID, SemanticRoutine.SA_TYPE_SPECIFIER_VOID]),
     (NonTerminal.Params, [Terminal.INT, Terminal.ID, NonTerminal.Param_prime, NonTerminal.Param_list]),
     (NonTerminal.Params, [Terminal.VOID]),
     (NonTerminal.Param_list, [Terminal.COMMA, NonTerminal.Param, NonTerminal.Param_list]),
@@ -133,7 +134,7 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Param, [NonTerminal.Declaration_initial, NonTerminal.Param_prime]),
     (NonTerminal.Param_prime, [Terminal.BRACKET_OPEN, Terminal.BRACKET_CLOSE]),
     (NonTerminal.Param_prime, [Terminal.EPSILON]),
-    (NonTerminal.Compound_stmt, [Terminal.BRACE_OPEN, NonTerminal.Declaration_list, NonTerminal.Statement_list, Terminal.BRACE_CLOSE]),
+    (NonTerminal.Compound_stmt, [SemanticRoutine.SCOPE_ENTER, Terminal.BRACE_OPEN, NonTerminal.Declaration_list, NonTerminal.Statement_list, Terminal.BRACE_CLOSE, SemanticRoutine.SCOPE_EXIT]),
     (NonTerminal.Statement_list, [NonTerminal.Statement, NonTerminal.Statement_list]),
     (NonTerminal.Statement_list, [Terminal.EPSILON]),
     (NonTerminal.Statement, [NonTerminal.Expression_stmt]),

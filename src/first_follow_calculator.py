@@ -5,9 +5,12 @@ from parser_constants import *
 
 class FirstFollowCalculator:
     def __init__(self, rules: List[GRAMMAR_RULE]):
-        self.rules = rules
-        self.first_sets: Dict[NonTerminal, Set[Terminal]] = {non_terminal: set() for non_terminal, _ in rules}
-        self.follow_sets: Dict[NonTerminal, Set[Terminal]] = {non_terminal: set() for non_terminal, _ in rules}
+        self.rules = [
+            (left, [i for i in right if isinstance(i, Terminal) or isinstance(i, NonTerminal)]) 
+            for left, right in rules
+        ]
+        self.first_sets: Dict[NonTerminal, Set[Terminal]] = {non_terminal: set() for non_terminal, _ in self.rules}
+        self.follow_sets: Dict[NonTerminal, Set[Terminal]] = {non_terminal: set() for non_terminal, _ in self.rules}
         self.predict_sets: List[Set[Terminal]] = []
 
     def collect_set(self, initial_set: Set[Terminal], items: GRAMMAR_RHS, additional_set: Set[Terminal]) -> Set[Terminal]:

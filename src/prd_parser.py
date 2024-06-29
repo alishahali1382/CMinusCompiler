@@ -2,6 +2,7 @@ from typing import Callable, Dict, Generator, List, Optional, Tuple
 
 import anytree
 
+from code_gen import CodeGen, SemanticRoutine
 from file_writers import syntax_error_file_writer
 from first_follow_calculator import FirstFollowCalculator
 from parser_constants import *
@@ -23,6 +24,7 @@ class Parser:
         self.scanner = Scanner(ignore_errors=True)
         self.token_generator = token_reader(self.scanner)
         self.lookahead = None
+        self.last_token = None
         self.procedures: Dict[NonTerminal, Callable] = {}
         self.eof = False
         
@@ -35,6 +37,8 @@ class Parser:
         
         for non_terminal in NonTerminal:
             self.procedures[non_terminal] = self.create_procedure(non_terminal)
+
+        self.codegen = CodeGen()
 
     def get_lookahead(self):
         if self.eof:
@@ -68,7 +72,6 @@ class Parser:
     def match_procedure(self, terminal: Terminal) -> Optional[anytree.Node]:
         if self.eof:
             return None
-        # TODO
         lookahead = self.get_lookahead()
         token, lineno = self.get_lookahead_token()
         if lookahead == Terminal.EOF:
@@ -79,6 +82,7 @@ class Parser:
 
         if lookahead == terminal:
             self.discard_lookahead()
+            self.last_token = token
             return anytree.Node(str(token))
 
         if terminal == Terminal.EOF:
@@ -87,8 +91,6 @@ class Parser:
                 return self.match_procedure(terminal)
             
         self.error(f"missing {terminal}", lineno)
-        #self.discard_lookahead()
-        # return self.match_procedure(terminal)
         return None
 
     def create_procedure(self, non_terminal: NonTerminal):
@@ -105,7 +107,9 @@ class Parser:
                 if rhs == [Terminal.EPSILON]:
                     return anytree.Node(str(non_terminal), children=[anytree.Node("epsilon")])
                 for symbol in rhs:
-                    if isinstance(symbol, NonTerminal):
+                    if isinstance(symbol, SemanticRoutine):
+                        self.codegen.code_gen(symbol, self.last_token.token_string if self.last_token else None)
+                    elif isinstance(symbol, NonTerminal):
                         children.append(self.procedures[symbol]())  # Call NonTerminal procedure
                     else:
                         children.append(self.match_procedure(symbol))  # Match Terminal

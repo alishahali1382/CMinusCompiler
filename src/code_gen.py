@@ -15,9 +15,28 @@ class SemanticRoutine(enum.Enum):
     SA_DECLERATION_ROLE_VARIABLE = "#sa_decleration_role_variable"
     SA_DECLERATION_ROLE_ARRAY = "#sa_decleration_role_array"
     SA_BEGIN_FUNCTION_STATEMENT = "#sa_begin_function_statement"
+    SA_CALEE_WORKS = "#sa_calee_works"
+    
+    SA_BEGIN_PARAM = "#sa_begin_param"
+    SA_ASSIGN_PARAM = "#sa_assign_param"
+    
+    SA_CLOSE_STMT = "#sa_close_stmt"
+    SA_CHECK_BREAK_JP_SAVE = "sa_check_break_jp_save"
     
     SA_BEGIN_FUNCTION_CALL = "#sa_begin_function_call"
     SA_END_FUNCTION_CALL = "#sa_end_function_call"
+    
+    SAVE = "#save"
+    JPF = "#jpf"
+    JPF_SAVE = "#jpf_save"
+    JP = "#jp"
+    SAVE_JUMP = "#save_jump"
+    JUMP_FILL = "#jump_fill"
+    FOR = "#for"
+    
+    SA_RETVIAL_AND_CALEE = "#sa_retvial_and_calee"
+    SA_INDEX_ARRAY = "#sa_index_array"
+    SA_INDEX_ARRAY_POP = "#sa_index_array_pop"
     
     PID = "#pid"
     PNUM = "#pnum"
@@ -118,6 +137,21 @@ class CodeGen:
             SemanticRoutine.SA_DECLERATION_ROLE_VARIABLE:   self.semantic_routine__sa_decleration_role_variable,
             SemanticRoutine.SA_DECLERATION_ROLE_ARRAY:      self.semantic_routine__sa_decleration_role_array,
             SemanticRoutine.SA_BEGIN_FUNCTION_STATEMENT:    self.semantic_routine__sa_begin_function_statement,
+            SemanticRoutine.SA_CALEE_WORKS:                 self.semantic_routine__sa_calee_works,
+            SemanticRoutine.SA_BEGIN_PARAM:                 self.semantic_routine__sa_begin_param,
+            SemanticRoutine.SA_ASSIGN_PARAM:                self.semantic_routine__sa_assign_param,
+            SemanticRoutine.SA_CLOSE_STMT:                  self.semantic_routine__close_stmt,
+            SemanticRoutine.SA_CHECK_BREAK_JP_SAVE:         self.semantic_routine__check_break_jp_save,
+            SemanticRoutine.SAVE:                           self.semantic_routine__save,
+            SemanticRoutine.JPF:                            self.semantic_routine__jpf,
+            SemanticRoutine.JPF_SAVE:                       self.semantic_routine__jpf_save,
+            SemanticRoutine.JP:                             self.semantic_routine__jp,
+            SemanticRoutine.SAVE_JUMP:                      self.semantic_routine__save_jump,
+            SemanticRoutine.JUMP_FILL:                      self.semantic_routine__jump_fill,
+            SemanticRoutine.FOR:                            self.semantic_routine__for,
+            SemanticRoutine.SA_RETVIAL_AND_CALEE:           self.semantic_routine__sa_retval_and_calee,
+            SemanticRoutine.SA_INDEX_ARRAY:                 self.semantic_routine__sa_index_array,
+            SemanticRoutine.SA_INDEX_ARRAY_POP:             self.semantic_routine__sa_index_array_pop,
             SemanticRoutine.PID:                            self.semantic_routine__pid,
             SemanticRoutine.PNUM:                           self.semantic_routine__pnum,
             SemanticRoutine.PUSH_PLUS:                      self.semantic_routine__push_plus,
@@ -299,7 +333,66 @@ class CodeGen:
         self.PB_index += 1
         self.SS_pop(2)
         self.SS_push(t)
+        
+    def semantic_routine__sa_calee_works(self, *args):
+        #TODO
+        pass
 
+    def semantic_routine__sa_assign_param(self, *args):
+        #TODO
+        pass
+
+    def semantic_routine__sa_begin_param(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__close_stmt(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__check_break_jp_save(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__save(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__jpf(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__jpf_save(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__jp(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__save_jump(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__jump_fill(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__for(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__sa_retval_and_calee(self, *args):
+        #TODO
+        pass
+    
+    def semantic_routine__sa_index_array(self, **args):
+        #TODO
+        pass
+    
+    def semantic_routine__sa_index_array_pop(self, **args):
+        #TODO
+        pass
 
 if __name__ == '__main__':
     pass

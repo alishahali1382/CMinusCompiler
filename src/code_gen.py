@@ -14,7 +14,13 @@ class SemanticRoutine(enum.Enum):
     SA_DECLERATION_ROLE_FUNCTION = "#sa_decleration_role_function"
     SA_DECLERATION_ROLE_VARIABLE = "#sa_decleration_role_variable"
     SA_DECLERATION_ROLE_ARRAY = "#sa_decleration_role_array"
+
     SA_BEGIN_FUNCTION_STATEMENT = "#sa_begin_function_statement"
+    SA_END_FUNCTION_STATEMENT = "#sa_end_function_statement"
+    SA_PARAM_ROLE_INT = "#sa_param_role_int"
+    SA_PARAM_ROLE_ARRAY = "#sa_param_role_array"
+    SA_FUNCTION_RETURN_VALUE = "#sa_function_return_value"
+    SA_FUNCTION_RETURN_JUMP = "#sa_function_return_jump"
     
     SA_BEGIN_FUNCTION_CALL = "#sa_begin_function_call"
     SA_END_FUNCTION_CALL = "#sa_end_function_call"
@@ -53,12 +59,24 @@ class ScopeItem:
         self.code_address = code_address
         self.memory_address = memory_address
         self.role = role
-        self.params = params
+        self.params: list[ScopeItem] = params
     
     def __repr__(self) -> str:
         if self.role == VAR_ROLE:
+            if self.type == INT_TYPE:
+                return f"<{self.name} int variable {self.memory_address}>"
+            elif self.type == VOID_TYPE:
+                return f"<{self.name} void variable {self.memory_address}>"
+            elif self.role == ARRAY_ROLE:
+                return f"<{self.name} {self.type} int[] variable {self.memory_address}>"
             return f"<{self.name} {self.type} variable {self.memory_address}>"
         elif self.role == FUNC_ROLE:
+            if self.type == INT_TYPE:
+                return f"<{self.name} int function {self.memory_address} {self.code_address}>"
+            elif self.type == VOID_TYPE:
+                return f"<{self.name} void function {self.memory_address} {self.code_address}>"
+            elif self.role == ARRAY_ROLE:
+                return f"<{self.name} {self.type} int[] function {self.memory_address} {self.code_address}>"
             return f"<{self.name} {self.type} function {self.memory_address} {self.code_address}>"
         return "<>"
 
@@ -75,7 +93,7 @@ class CodeGen:
         self.PARAM_COUNTER = 500
         
         self.SS = []
-        self.function_call_SS = []
+        self.function_stack: list[ScopeItem] = []
 
     def SS_push(self, item):
         self.SS.append(item)
@@ -131,6 +149,11 @@ class CodeGen:
             SemanticRoutine.DO_MULTIPLY:                    self.semantic_routine__do_multiply,
             SemanticRoutine.SA_BEGIN_FUNCTION_CALL:         self.semantic_routine__sa_begin_function_call,
             SemanticRoutine.SA_END_FUNCTION_CALL:           self.semantic_routine__sa_end_function_call,
+            SemanticRoutine.SA_PARAM_ROLE_INT:              self.semantic_routine__sa_param_role_int,
+            SemanticRoutine.SA_PARAM_ROLE_ARRAY:            self.semantic_routine__sa_param_role_array,
+            SemanticRoutine.SA_END_FUNCTION_STATEMENT:      self.semantic_routine__sa_end_function_statement,
+            SemanticRoutine.SA_FUNCTION_RETURN_JUMP:        self.semantic_routine__sa_function_return_jump,
+            SemanticRoutine.SA_FUNCTION_RETURN_VALUE:       self.semantic_routine__sa_function_return_value,
         }
         semantic_routines[semantic_routine](*args)
         # print(" "*50, self.scope_stack)
@@ -182,9 +205,11 @@ class CodeGen:
         self.scope_stack[-1].role = FUNC_ROLE
         self.scope_stack[-1].params = []
         
-        self.scope_stack[-1].memory_address = self.PARAM_COUNTER  # RETURN ADDRESS
+        self.scope_stack[-1].memory_address = self.PARAM_COUNTER  # RETURN JUMP ADDRESS
         self.PARAM_COUNTER += 4
-        
+
+        self.function_stack.append(self.scope_stack[-1])
+
         # if self.scope_stack[-1].type == INT_TYPE:
         if True: # I also leave RETURN_ADDRESS for void functions to match output of testcases
             self.PARAM_COUNTER += 4 # leave space for the return value, address is FUNCTION.memory_address + 4
@@ -207,11 +232,46 @@ class CodeGen:
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         # TODO: do some stuff like array size after ]
     
+    def semantic_routine__sa_param_role_int(self, *args):
+        print("called param_role_int")
+        self.scope_stack[-1].role = VAR_ROLE
+        self.scope_stack[-1].memory_address = self.PARAM_COUNTER
+        self.PARAM_COUNTER += 4
+        self.function_stack[-1].params.append(self.scope_stack[-1])
+
+    def semantic_routine__sa_param_role_array(self, *args):
+        print("called param_role_array")
+        self.scope_stack[-1].role = ARRAY_ROLE
+        self.scope_stack[-1].memory_address = self.PARAM_COUNTER
+        self.PARAM_COUNTER += 4
+        self.function_stack[-1].params.append(self.scope_stack[-1])
+    
     def semantic_routine__sa_begin_function_statement(self, *args):
         print("called begin_function_statement")
-        self.scope_stack[-1].code_address = self.PB_index
-        if  self.scope_stack[-1].name == "main":
+        self.function_stack[-1].code_address = self.PB_index
+        if  self.function_stack[-1].name == "main":
             self.PB[JUMP_TO_MAIN_ADDR] = ["JP", self.PB_index, None, None]
+
+    def semantic_routine__sa_end_function_statement(self, *args):
+        print("called end_function_statement")
+        while self.scope_stack[-1] != self.function_stack[-1]:
+            self.scope_stack.pop()
+        self.function_stack.pop()
+    
+    def semantic_routine__sa_function_return_value(self, *args):
+        print("called function_return")
+        if self.function_stack[-1].type == VOID_TYPE:
+            print("ERROR: function return type not found")
+            return
+        self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), f"{self.function_stack[-1].memory_address+4}", None]
+        self.PB_index += 1
+        self.SS_pop()
+
+    def semantic_routine__sa_function_return_jump(self, *args):
+        print("called function_return_jump")
+        if self.function_stack[-1].name != "main":
+            self.PB[self.PB_index] = ["JP", f"@{self.function_stack[-1].memory_address}", None, None]
+            self.PB_index += 1
 
     # function call:
     def semantic_routine__sa_begin_function_call(self, func_name, *args):
@@ -223,21 +283,42 @@ class CodeGen:
         if func_scope_item.role != FUNC_ROLE:
             print(f"ERROR: {func_name} is not a function")
             return
-        self.function_call_SS.append(func_scope_item)
-    
+        self.function_stack.append(func_scope_item)
+
     def semantic_routine__sa_end_function_call(self, *args):
         print("called end_function_call")
-        func_scope_item = self.function_call_SS.pop()
-        if func_scope_item.name == "output":
+        func_scope_item = self.function_stack.pop()
+        if func_scope_item == self.scope_stack[0]: # handle shadowing the output function
+        # if func_scope_item.name == "output":
             self.PB[self.PB_index] = ["PRINT", self.SS_top(), None, None]
             self.PB_index += 1
             self.SS_pop()
-        else:
-            pass
-        #     self.PB[self.PB_index] = ["CALL", func_scope_item.code_address, self.SS_top(), None]
-        #     self.PB_index += 1
-        # self.SS_pop()
-        # TODO
+            return
+        for param in func_scope_item.params[::-1]:
+            # TODO: check SS_top() type
+            if param.role == VAR_ROLE:
+                self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
+                self.PB_index += 1
+            elif param.role == ARRAY_ROLE:
+                # self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
+                # self.PB_index += 1
+                # TODO: fix
+                raise NotImplementedError("Arrays are not implemented yet")
+            self.SS_pop()
+
+        self.PB[self.PB_index] = ["ASSIGN", f"#{self.PB_index+2}", f"{func_scope_item.memory_address}", None]
+        self.PB_index += 1
+
+        self.PB[self.PB_index] = ["JP", func_scope_item.code_address, None, None]
+        self.PB_index += 1
+
+        # TODO: maybe skip this for VOID_TYPE functions
+        t = self.gettemp()
+        self.PB[self.PB_index] = ["ASSIGN", f"{func_scope_item.memory_address+4}", t, None]
+        self.PB_index += 1
+        self.SS_pop() # pop the function address
+        self.SS_push(t)
+
 
     # algebraic:
     def semantic_routine__push_plus(self, *args):

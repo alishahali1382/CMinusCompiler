@@ -124,16 +124,16 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Declaration_prime, [NonTerminal.Var_declaration_prime]),
     (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_VARIABLE, Terminal.SEMICOLON]),
     (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.NUM, Terminal.BRACKET_CLOSE, Terminal.SEMICOLON]),
-    (NonTerminal.Fun_declaration_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Params, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_BEGIN_FUNCTION_STATEMENT, NonTerminal.Compound_stmt]), # TODO: add something to the end that returns to the caller, except for main
+    (NonTerminal.Fun_declaration_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Params, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_BEGIN_FUNCTION_STATEMENT, NonTerminal.Compound_stmt, SemanticRoutine.SA_FUNCTION_RETURN_JUMP, SemanticRoutine.SA_END_FUNCTION_STATEMENT]), # TODO
     (NonTerminal.Type_specifier, [Terminal.INT, SemanticRoutine.SA_TYPE_SPECIFIER_INT]),
     (NonTerminal.Type_specifier, [Terminal.VOID, SemanticRoutine.SA_TYPE_SPECIFIER_VOID]),
-    (NonTerminal.Params, [Terminal.INT, Terminal.ID, NonTerminal.Param_prime, NonTerminal.Param_list]),
+    (NonTerminal.Params, [SemanticRoutine.SA_BEGIN_DECLERATION, Terminal.INT, Terminal.ID, SemanticRoutine.SA_ASSIGN_NAME, NonTerminal.Param_prime, NonTerminal.Param_list]),
     (NonTerminal.Params, [Terminal.VOID]),
     (NonTerminal.Param_list, [Terminal.COMMA, NonTerminal.Param, NonTerminal.Param_list]),
     (NonTerminal.Param_list, [Terminal.EPSILON]),
     (NonTerminal.Param, [NonTerminal.Declaration_initial, NonTerminal.Param_prime]),
-    (NonTerminal.Param_prime, [Terminal.BRACKET_OPEN, Terminal.BRACKET_CLOSE]),
-    (NonTerminal.Param_prime, [Terminal.EPSILON]),
+    (NonTerminal.Param_prime, [SemanticRoutine.SA_PARAM_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.BRACKET_CLOSE]),
+    (NonTerminal.Param_prime, [Terminal.EPSILON, SemanticRoutine.SA_PARAM_ROLE_INT]),
     (NonTerminal.Compound_stmt, [SemanticRoutine.SCOPE_ENTER, Terminal.BRACE_OPEN, NonTerminal.Declaration_list, NonTerminal.Statement_list, Terminal.BRACE_CLOSE, SemanticRoutine.SCOPE_EXIT]),
     (NonTerminal.Statement_list, [NonTerminal.Statement, NonTerminal.Statement_list]),
     (NonTerminal.Statement_list, [Terminal.EPSILON]),
@@ -149,9 +149,9 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Else_stmt, [Terminal.ENDIF]),
     (NonTerminal.Else_stmt, [Terminal.ELSE, NonTerminal.Statement, Terminal.ENDIF]),
     (NonTerminal.Iteration_stmt, [Terminal.FOR, Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.SEMICOLON, NonTerminal.Expression, Terminal.SEMICOLON, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE, NonTerminal.Statement]),
-    (NonTerminal.Return_stmt, [Terminal.RETURN, NonTerminal.Return_stmt_prime]),
-    (NonTerminal.Return_stmt_prime, [Terminal.SEMICOLON]),
-    (NonTerminal.Return_stmt_prime, [NonTerminal.Expression, Terminal.SEMICOLON]),
+    (NonTerminal.Return_stmt, [Terminal.RETURN, NonTerminal.Return_stmt_prime, SemanticRoutine.SA_FUNCTION_RETURN_JUMP]),
+    (NonTerminal.Return_stmt_prime, [Terminal.SEMICOLON]), # OK
+    (NonTerminal.Return_stmt_prime, [NonTerminal.Expression, SemanticRoutine.SA_FUNCTION_RETURN_VALUE, Terminal.SEMICOLON]), # OK
     (NonTerminal.Expression, [NonTerminal.Simple_expression_zegond]),
     (NonTerminal.Expression, [Terminal.ID, SemanticRoutine.PID, NonTerminal.B]),
     (NonTerminal.B, [Terminal.EQUAL, NonTerminal.Expression, SemanticRoutine.PID_ASSIGN]), # OK

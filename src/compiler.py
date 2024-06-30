@@ -22,5 +22,5 @@ with open("output.txt", "w") as f:
             lastline = i
             f.write(code + "\n")
             if parser.codegen.comment[i] != None:
-                code = f"{code:<40} {parser.codegen.comment[i]}"
+                code = f"{code:<40}" #{parser.codegen.comment[i]}
             print(code)

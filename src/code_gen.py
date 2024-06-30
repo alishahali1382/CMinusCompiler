@@ -372,10 +372,12 @@ class CodeGen:
         
         X = self._is_array(self.SS_top(2))
         Y = self._is_array(self.SS_top())
-        if X is not None and Y is not None:
-            if X != Y:
-                lineno = 0 #TODO
-                self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {X} instead of {Y}.")
+            
+        if X != Y:
+            lineno = 0 #TODO
+            x = 'array' if X else 'int'
+            y = 'array' if Y else 'int'
+            self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {x} instead of {y}.")
             
         self.PB_index += 1
         self.SS_pop(3)
@@ -399,10 +401,12 @@ class CodeGen:
         
         Y = self._is_array(self.SS_top())
         X = self._is_array(self.SS_top(1))
-        if X is not None and Y is not None:
-            if X != Y:
-                lineno = 0 #TODO
-                self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {X} instead of {Y}.")
+        
+        if X != Y:
+            lineno = 0 #TODO
+            x = 'array' if X else 'int'
+            y = 'array' if Y else 'int'
+            self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {x} instead of {y}.")
         
         self.PB_index += 1
         self.SS_pop(1) # NOTE: only pop 1, and the result remains on top of the stack
@@ -413,10 +417,12 @@ class CodeGen:
         
         X = self._is_array(self.SS_top())
         Y = self._is_array(self.SS_top(1))
-        if X is not None and Y is not None:
-            if X != Y:
-                lineno = 0 #TODO
-                self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {X} instead of {Y}.")
+            
+        if X != Y:
+            lineno = 0 #TODO
+            x = 'array' if X else 'int'
+            y = 'array' if Y else 'int'
+            self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {x} instead of {y}.")
          
         
         self.PB_index += 1

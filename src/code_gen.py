@@ -93,7 +93,8 @@ class CodeGen:
         self.PARAM_COUNTER = 500
 
         self.SS = []
-        self.function_stack: list[ScopeItem] = []
+        self.function_call_stack: list[ScopeItem] = []
+        self.function_declaration_stack: list[ScopeItem] = []
         self.for_break_SS: list[list[int]] = []
 
     def SS_push(self, item):
@@ -120,6 +121,12 @@ class CodeGen:
                 return scope_item.memory_address
         return None
 
+    def _is_array(self, address):
+        for scope_item in self.scope_stack:
+            if scope_item and scope_item.memory_address == address:
+                return scope_item.role == ARRAY_ROLE
+        return False
+
     def gettemp(self):
         self.PARAM_COUNTER += 4
         return self.PARAM_COUNTER - 4
@@ -137,7 +144,7 @@ class CodeGen:
                 if item != checkpoint[i]:
                     self.comment[i] = f"{semantic_routine}"
 
-    def report_semantic_error(msg):
+    def report_semantic_error(self, msg):
         print(f"Semantic Error! {msg}")
 
     # *********************** semantic routine implementations ***********************
@@ -177,7 +184,7 @@ class CodeGen:
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER  # RETURN JUMP ADDRESS
         self.PARAM_COUNTER += 4
 
-        self.function_stack.append(self.scope_stack[-1])
+        self.function_declaration_stack.append(self.scope_stack[-1])
 
         # if self.scope_stack[-1].type == INT_TYPE:
         if True: # leave RETURN_ADDRESS for void functions to match output of testcases
@@ -209,71 +216,108 @@ class CodeGen:
         self.scope_stack[-1].role = VAR_ROLE
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         self.PARAM_COUNTER += 4
-        self.function_stack[-1].params.append(self.scope_stack[-1])
+        self.function_declaration_stack[-1].params.append(self.scope_stack[-1])
 
     def semantic_routine__sa_param_role_array(self, *args):
         self.scope_stack[-1].role = ARRAY_ROLE
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         self.PARAM_COUNTER += 4
-        self.function_stack[-1].params.append(self.scope_stack[-1])
+        self.function_declaration_stack[-1].params.append(self.scope_stack[-1])
 
     def semantic_routine__sa_begin_function_statement(self, *args):
-        self.function_stack[-1].code_address = self.PB_index
-        if  self.function_stack[-1].name == "main":
+        self.function_declaration_stack[-1].code_address = self.PB_index
+        if  self.function_declaration_stack[-1].name == "main":
             self.PB[JUMP_TO_MAIN_ADDR] = ["JP", self.PB_index, None, None]
 
     def semantic_routine__sa_end_function_statement(self, *args):
-        while self.scope_stack[-1] != self.function_stack[-1]:
+        while self.scope_stack[-1] != self.function_declaration_stack[-1]:
             self.scope_stack.pop()
-        self.function_stack.pop()
+        self.function_declaration_stack.pop()
 
     def semantic_routine__sa_function_return_value(self, *args):
-        if self.function_stack[-1].type == VOID_TYPE:
+        if self.function_declaration_stack[-1].type == VOID_TYPE:
             print("ERROR: function return type not found")
             return
-        self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), f"{self.function_stack[-1].memory_address+4}", None]
+        self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), f"{self.function_declaration_stack[-1].memory_address+4}", None]
         self.PB_index += 1
         self.SS_pop()
 
     def semantic_routine__sa_function_return_jump(self, *args):
-        if self.function_stack[-1].name != "main":
-            self.PB[self.PB_index] = ["JP", f"@{self.function_stack[-1].memory_address}", None, None]
+        if self.function_declaration_stack[-1].name != "main":
+            self.PB[self.PB_index] = ["JP", f"@{self.function_declaration_stack[-1].memory_address}", None, None]
             self.PB_index += 1
 
     # function call:
     def semantic_routine__sa_begin_function_call(self, func_name, *args):
         func_scope_item = self.get_scope_item(func_name)
         if func_scope_item is None:
-            print("ERROR: function not found")
+            self.report_semantic_error(f"ERROR: function {func_name} not found")
             return
         if func_scope_item.role != FUNC_ROLE:
-            print(f"ERROR: {func_name} is not a function")
+            self.report_semantic_error(f"ERROR: {func_name} is not a function")
             return
-        self.function_stack.append(func_scope_item)
+        self.function_call_stack.append(func_scope_item)
 
     def semantic_routine__sa_end_function_call(self, *args):
-        func_scope_item = self.function_stack.pop()
+        func_scope_item = self.function_call_stack.pop()
+        current_function_item = self.function_declaration_stack[-1]
         if func_scope_item == self.scope_stack[0]: # handle shadowing the output function
         # if func_scope_item.name == "output":
             self.PB[self.PB_index] = ["PRINT", self.SS_top(), None, None]
             self.PB_index += 1
             self.SS_pop()
             return
+
+        save_addresses = []
+        if func_scope_item == current_function_item:
+            # recursive function:
+            save_addresses = [current_function_item.memory_address] # RETURN JUMP ADDRESS
+            # skip RETURN VALUE
+            # for i in range(current_function_item.memory_address+8, self.PARAM_COUNTER, 4):
+            #     save_addresses.append(i)
+            for scope_item in self.scope_stack[::-1]:
+                if not scope_item:
+                    continue
+                if scope_item == current_function_item:
+                    break
+                # print(scope_item)
+                save_addresses.append(scope_item.memory_address)
+            
+            # print("*"*20, save_addresses)
+
+        for addr in save_addresses:
+            self.PB[self.PB_index] = ["ASSIGN", addr, f"@{SP_ADDR}", None]
+            self.PB_index += 1
+            self.PB[self.PB_index] = ["ADD", "#4", SP_ADDR, SP_ADDR]
+            self.PB_index += 1
+
+        n = len(func_scope_item.params)
         for param in func_scope_item.params[::-1]:
             # TODO: check SS_top() type
             if param.role == VAR_ROLE:
+                if self._is_array(param.memory_address):
+                    self.report_semantic_error(f"Mismatch in type of argument {n} for '{func_scope_item.name}'. Expected 'int' but got 'int[]' instead'")
                 self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
                 self.PB_index += 1
             elif param.role == ARRAY_ROLE:
+                if not self._is_array(param.memory_address):
+                    self.report_semantic_error(f"Mismatch in type of argument {n} for '{func_scope_item.name}'. Expected 'int[]' but got 'int' instead'")
                 self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
                 self.PB_index += 1
             self.SS_pop()
+            n -= 1
 
         self.PB[self.PB_index] = ["ASSIGN", f"#{self.PB_index+2}", f"{func_scope_item.memory_address}", None]
         self.PB_index += 1
 
         self.PB[self.PB_index] = ["JP", func_scope_item.code_address, None, None]
         self.PB_index += 1
+
+        for addr in save_addresses[::-1]:
+            self.PB[self.PB_index] = ["SUB", SP_ADDR, "#4", SP_ADDR]
+            self.PB_index += 1
+            self.PB[self.PB_index] = ["ASSIGN", f"@{SP_ADDR}", addr, None]
+            self.PB_index += 1
 
         t = self.gettemp()
         if func_scope_item.type == INT_TYPE:
@@ -324,12 +368,9 @@ class CodeGen:
         self.SS_push(t)
 
     def semantic_routine__pid_assign(self, *args):
-        print(">"*20, self.SS,)
         self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), self.SS_top(1), None]
         self.PB_index += 1
-        print(" "*40, self.PB[self.PB_index-1])
         self.SS_pop(1) # NOTE: only pop 1, and the result remains on top of the stack
-        print(">"*20, self.SS,)
 
     def semantic_routine__do_multiply(self, *args):
         t = self.gettemp()

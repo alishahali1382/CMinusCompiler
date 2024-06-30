@@ -104,7 +104,10 @@ class Parser:
                 rhs = self.rules[i][1]
                 if lookahead not in self.predict_sets[i]:
                     continue
-                if rhs == [Terminal.EPSILON]:
+                if Terminal.EPSILON in rhs: # we may have action symbols in the rule, while the rule is epsilon
+                    for symbol in rhs:
+                        if isinstance(symbol, SemanticRoutine):
+                            self.codegen.code_gen(symbol, self.last_token.token_string if self.last_token else None)
                     return anytree.Node(str(non_terminal), children=[anytree.Node("epsilon")])
                 for symbol in rhs:
                     if isinstance(symbol, SemanticRoutine):

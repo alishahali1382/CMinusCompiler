@@ -27,4 +27,13 @@ else
     fi
 fi
 echo ========================
+if diff -q semantic_errors.txt ans/semantic_errors.txt; then
+    echo "$1: OK, semantic errors are correct."
+else
+    echo "$1: Wrong! semantic errors are different."
+    echo "Expected:"
+    cat ans/semantic_errors.txt
+    echo "Got:"
+    cat semantic_errors.txt
+fi
 echo

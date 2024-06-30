@@ -155,7 +155,7 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Expression, [NonTerminal.Simple_expression_zegond]), #Ok
     (NonTerminal.Expression, [Terminal.ID, SemanticRoutine.PID, NonTerminal.B]), #Ok
     (NonTerminal.B, [Terminal.EQUAL, NonTerminal.Expression, SemanticRoutine.PID_ASSIGN]), # OK
-    (NonTerminal.B, [SemanticRoutine.SA_INDEX_ARRAY, Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, SemanticRoutine.SA_INDEX_ARRAY_POP, NonTerminal.H]), #Ok
+    (NonTerminal.B, [Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, SemanticRoutine.SA_INDEX_ARRAY_POP, NonTerminal.H]), #Ok
     (NonTerminal.B, [NonTerminal.Simple_expression_prime]), # OK
     (NonTerminal.H, [Terminal.EQUAL, NonTerminal.Expression, SemanticRoutine.PID_ASSIGN]), #Ok
     (NonTerminal.H, [NonTerminal.G, NonTerminal.D, NonTerminal.C]), #Ok
@@ -189,7 +189,7 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Factor, [Terminal.NUM, SemanticRoutine.PNUM]), # OK
     (NonTerminal.Var_call_prime, [SemanticRoutine.SA_BEGIN_FUNCTION_CALL, Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_END_FUNCTION_CALL]), # OK
     (NonTerminal.Var_call_prime, [NonTerminal.Var_prime]), #Ok
-    (NonTerminal.Var_prime, [SemanticRoutine.SA_INDEX_ARRAY, Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, SemanticRoutine.SA_INDEX_ARRAY_POP]), #Ok
+    (NonTerminal.Var_prime, [Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, SemanticRoutine.SA_INDEX_ARRAY_POP]), #Ok
     (NonTerminal.Var_prime, [Terminal.EPSILON]), # OK
     (NonTerminal.Factor_prime, [SemanticRoutine.SA_BEGIN_FUNCTION_CALL, Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_END_FUNCTION_CALL]), # OK
     (NonTerminal.Factor_prime, [Terminal.EPSILON]), #Ok

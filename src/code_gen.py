@@ -126,6 +126,7 @@ class CodeGen:
     def _is_array(self, address):
         for scope_item in self.scope_stack:
             if scope_item and scope_item.memory_address == address:
+                # print(scope_item, scope_item.role == ARRAY_ROLE)
                 return scope_item.role == ARRAY_ROLE
         return False
 
@@ -316,12 +317,15 @@ class CodeGen:
         for param in func_scope_item.params[::-1]:
             # TODO: check SS_top() type
             if param.role == VAR_ROLE:
-                if self._is_array(param.memory_address):
+                # print(param.memory_address, self.SS_top())
+                if self._is_array(self.SS_top()):
                     self.report_semantic_error(f"Mismatch in type of argument {n} for '{func_scope_item.name}'. Expected 'int' but got 'int[]' instead'")
                 self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
                 self.PB_index += 1
             elif param.role == ARRAY_ROLE:
-                if not self._is_array(param.memory_address):
+                print("*"*50)
+                print(self.SS_top())
+                if not self._is_array(self.SS_top()):
                     self.report_semantic_error(f"Mismatch in type of argument {n} for '{func_scope_item.name}'. Expected 'int[]' but got 'int' instead'")
                 self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
                 self.PB_index += 1

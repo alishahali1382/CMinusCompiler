@@ -115,84 +115,84 @@ EOF = Terminal.EOF
 
 
 grammar_rules: List[GRAMMAR_RULE] = [
-    (NonTerminal.Program, [NonTerminal.Declaration_list]),
-    (NonTerminal.Declaration_list, [NonTerminal.Declaration, NonTerminal.Declaration_list]),
-    (NonTerminal.Declaration_list, [Terminal.EPSILON]),
-    (NonTerminal.Declaration, [NonTerminal.Declaration_initial, NonTerminal.Declaration_prime]),
-    (NonTerminal.Declaration_initial, [SemanticRoutine.SA_BEGIN_DECLERATION, NonTerminal.Type_specifier, Terminal.ID, SemanticRoutine.SA_ASSIGN_NAME]),
-    (NonTerminal.Declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_FUNCTION, NonTerminal.Fun_declaration_prime]),
-    (NonTerminal.Declaration_prime, [NonTerminal.Var_declaration_prime]),
-    (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_VARIABLE, Terminal.SEMICOLON]),
-    (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.NUM, Terminal.BRACKET_CLOSE, Terminal.SEMICOLON]),
+    (NonTerminal.Program, [NonTerminal.Declaration_list]), # OK
+    (NonTerminal.Declaration_list, [NonTerminal.Declaration, NonTerminal.Declaration_list]), # OK
+    (NonTerminal.Declaration_list, [Terminal.EPSILON]), # OK
+    (NonTerminal.Declaration, [NonTerminal.Declaration_initial, NonTerminal.Declaration_prime]), # OK
+    (NonTerminal.Declaration_initial, [SemanticRoutine.SA_BEGIN_DECLERATION, NonTerminal.Type_specifier, Terminal.ID, SemanticRoutine.SA_ASSIGN_NAME]), # OK
+    (NonTerminal.Declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_FUNCTION, NonTerminal.Fun_declaration_prime]), # OK
+    (NonTerminal.Declaration_prime, [NonTerminal.Var_declaration_prime]), # OK
+    (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_VARIABLE, Terminal.SEMICOLON]), # OK
+    (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.NUM, Terminal.BRACKET_CLOSE, Terminal.SEMICOLON]), # OK
     (NonTerminal.Fun_declaration_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Params, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_BEGIN_FUNCTION_STATEMENT, NonTerminal.Compound_stmt, SemanticRoutine.SA_FUNCTION_RETURN_JUMP, SemanticRoutine.SA_END_FUNCTION_STATEMENT]), # TODO
-    (NonTerminal.Type_specifier, [Terminal.INT, SemanticRoutine.SA_TYPE_SPECIFIER_INT]),
-    (NonTerminal.Type_specifier, [Terminal.VOID, SemanticRoutine.SA_TYPE_SPECIFIER_VOID]),
-    (NonTerminal.Params, [SemanticRoutine.SA_BEGIN_DECLERATION, Terminal.INT, Terminal.ID, SemanticRoutine.SA_ASSIGN_NAME, NonTerminal.Param_prime, NonTerminal.Param_list]),
-    (NonTerminal.Params, [Terminal.VOID]),
-    (NonTerminal.Param_list, [Terminal.COMMA, NonTerminal.Param, NonTerminal.Param_list]),
-    (NonTerminal.Param_list, [Terminal.EPSILON]),
-    (NonTerminal.Param, [NonTerminal.Declaration_initial, NonTerminal.Param_prime]),
-    (NonTerminal.Param_prime, [SemanticRoutine.SA_PARAM_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.BRACKET_CLOSE]),
-    (NonTerminal.Param_prime, [Terminal.EPSILON, SemanticRoutine.SA_PARAM_ROLE_INT]),
-    (NonTerminal.Compound_stmt, [SemanticRoutine.SCOPE_ENTER, Terminal.BRACE_OPEN, NonTerminal.Declaration_list, NonTerminal.Statement_list, Terminal.BRACE_CLOSE, SemanticRoutine.SCOPE_EXIT]),
-    (NonTerminal.Statement_list, [NonTerminal.Statement, NonTerminal.Statement_list]),
-    (NonTerminal.Statement_list, [Terminal.EPSILON]),
-    (NonTerminal.Statement, [NonTerminal.Expression_stmt]),
-    (NonTerminal.Statement, [NonTerminal.Compound_stmt]),
-    (NonTerminal.Statement, [NonTerminal.Selection_stmt]),
-    (NonTerminal.Statement, [NonTerminal.Iteration_stmt]),
-    (NonTerminal.Statement, [NonTerminal.Return_stmt]),
-    (NonTerminal.Expression_stmt, [NonTerminal.Expression, Terminal.SEMICOLON]),
-    (NonTerminal.Expression_stmt, [Terminal.BREAK, Terminal.SEMICOLON]),
-    (NonTerminal.Expression_stmt, [Terminal.SEMICOLON]),
-    (NonTerminal.Selection_stmt, [Terminal.IF, Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE, NonTerminal.Statement, NonTerminal.Else_stmt]),
-    (NonTerminal.Else_stmt, [Terminal.ENDIF]),
-    (NonTerminal.Else_stmt, [Terminal.ELSE, NonTerminal.Statement, Terminal.ENDIF]),
-    (NonTerminal.Iteration_stmt, [Terminal.FOR, Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.SEMICOLON, NonTerminal.Expression, Terminal.SEMICOLON, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE, NonTerminal.Statement]),
-    (NonTerminal.Return_stmt, [Terminal.RETURN, NonTerminal.Return_stmt_prime, SemanticRoutine.SA_FUNCTION_RETURN_JUMP]),
-    (NonTerminal.Return_stmt_prime, [Terminal.SEMICOLON]), # OK
-    (NonTerminal.Return_stmt_prime, [NonTerminal.Expression, SemanticRoutine.SA_FUNCTION_RETURN_VALUE, Terminal.SEMICOLON]), # OK
-    (NonTerminal.Expression, [NonTerminal.Simple_expression_zegond]),
-    (NonTerminal.Expression, [Terminal.ID, SemanticRoutine.PID, NonTerminal.B]),
+    (NonTerminal.Type_specifier, [Terminal.INT, SemanticRoutine.SA_TYPE_SPECIFIER_INT]), #Ok
+    (NonTerminal.Type_specifier, [Terminal.VOID, SemanticRoutine.SA_TYPE_SPECIFIER_VOID]), #Ok
+    (NonTerminal.Params, [SemanticRoutine.SA_BEGIN_DECLERATION, Terminal.INT, SemanticRoutine.SA_TYPE_SPECIFIER_INT, Terminal.ID, SemanticRoutine.SA_ASSIGN_NAME, NonTerminal.Param_prime, NonTerminal.Param_list]), #Ok
+    (NonTerminal.Params, [Terminal.VOID]), #Ok
+    (NonTerminal.Param_list, [Terminal.COMMA, NonTerminal.Param, NonTerminal.Param_list]), #maybe cause duplicate type specifier #TODO
+    (NonTerminal.Param_list, [Terminal.EPSILON]), #Ok
+    (NonTerminal.Param, [NonTerminal.Declaration_initial, NonTerminal.Param_prime]), #Ok
+    (NonTerminal.Param_prime, [SemanticRoutine.SA_PARAM_ROLE_ARRAY, SemanticRoutine.SA_DECLERATION_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.BRACKET_CLOSE]), #Ok
+    (NonTerminal.Param_prime, [Terminal.EPSILON, SemanticRoutine.SA_PARAM_ROLE_INT]), #Ok
+    (NonTerminal.Compound_stmt, [SemanticRoutine.SCOPE_ENTER, Terminal.BRACE_OPEN, NonTerminal.Declaration_list, NonTerminal.Statement_list, Terminal.BRACE_CLOSE, SemanticRoutine.SCOPE_EXIT]), #Ok
+    (NonTerminal.Statement_list, [NonTerminal.Statement, NonTerminal.Statement_list]), #Ok
+    (NonTerminal.Statement_list, [Terminal.EPSILON]), #Ok
+    (NonTerminal.Statement, [NonTerminal.Expression_stmt]), #Ok
+    (NonTerminal.Statement, [NonTerminal.Compound_stmt]), #Ok 
+    (NonTerminal.Statement, [NonTerminal.Selection_stmt]), #Ok
+    (NonTerminal.Statement, [NonTerminal.Iteration_stmt]), #Ok
+    (NonTerminal.Statement, [NonTerminal.Return_stmt]), #Ok
+    (NonTerminal.Expression_stmt, [NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.POP]), #OK
+    (NonTerminal.Expression_stmt, [SemanticRoutine.SA_CHECK_BREAK_JP_SAVE, Terminal.BREAK, Terminal.SEMICOLON]), #OK
+    (NonTerminal.Expression_stmt, [Terminal.SEMICOLON, SemanticRoutine.POP]), #Ok
+    (NonTerminal.Selection_stmt, [Terminal.IF, Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SAVE, NonTerminal.Statement, NonTerminal.Else_stmt]),
+    (NonTerminal.Else_stmt, [Terminal.ENDIF, SemanticRoutine.JPF]), #Ok
+    (NonTerminal.Else_stmt, [Terminal.ELSE, SemanticRoutine.JPF_SAVE, NonTerminal.Statement, Terminal.ENDIF, SemanticRoutine.JP]), #Ok
+    (NonTerminal.Iteration_stmt, [Terminal.FOR, Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.LABEL, NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.SAVE_JUMP, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.JUMP_FILL, NonTerminal.Statement, SemanticRoutine.FOR]), #Ok
+    (NonTerminal.Return_stmt, [Terminal.RETURN, NonTerminal.Return_stmt_prime, SemanticRoutine.SA_FUNCTION_RETURN_JUMP]), #Ok
+    (NonTerminal.Return_stmt_prime, [Terminal.SEMICOLON]), # OK #Ok
+    (NonTerminal.Return_stmt_prime, [NonTerminal.Expression, SemanticRoutine.SA_FUNCTION_RETURN_VALUE, Terminal.SEMICOLON]), # OK #Ok
+    (NonTerminal.Expression, [NonTerminal.Simple_expression_zegond]), #Ok
+    (NonTerminal.Expression, [Terminal.ID, SemanticRoutine.PID, NonTerminal.B]), #Ok
     (NonTerminal.B, [Terminal.EQUAL, NonTerminal.Expression, SemanticRoutine.PID_ASSIGN]), # OK
-    (NonTerminal.B, [Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, NonTerminal.H]),
+    (NonTerminal.B, [SemanticRoutine.SA_INDEX_ARRAY, Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, SemanticRoutine.SA_INDEX_ARRAY_POP, NonTerminal.H]), #Ok
     (NonTerminal.B, [NonTerminal.Simple_expression_prime]), # OK
-    (NonTerminal.H, [Terminal.EQUAL, NonTerminal.Expression]),
-    (NonTerminal.H, [NonTerminal.G, NonTerminal.D, NonTerminal.C]),
-    (NonTerminal.Simple_expression_zegond, [NonTerminal.Additive_expression_zegond, NonTerminal.C]),
-    (NonTerminal.Simple_expression_prime, [NonTerminal.Additive_expression_prime, NonTerminal.C]),
+    (NonTerminal.H, [Terminal.EQUAL, NonTerminal.Expression, SemanticRoutine.PID_ASSIGN]), #Ok
+    (NonTerminal.H, [NonTerminal.G, NonTerminal.D, NonTerminal.C]), #Ok
+    (NonTerminal.Simple_expression_zegond, [NonTerminal.Additive_expression_zegond, NonTerminal.C]), #Ok
+    (NonTerminal.Simple_expression_prime, [NonTerminal.Additive_expression_prime, NonTerminal.C]), #Ok
     (NonTerminal.C, [NonTerminal.Relop, NonTerminal.Additive_expression, SemanticRoutine.DO_RELOP]), # OK
     (NonTerminal.C, [Terminal.EPSILON]), # OK
     (NonTerminal.Relop, [Terminal.GREATER, SemanticRoutine.PUSH_RELOP_GREATER]), # OK
     (NonTerminal.Relop, [Terminal.DOUBLE_EQUAL, SemanticRoutine.PUSH_RELOP_EQUAL]), # OK
-    (NonTerminal.Additive_expression, [NonTerminal.Term, NonTerminal.D]),
-    (NonTerminal.Additive_expression_prime, [NonTerminal.Term_prime, NonTerminal.D]),
-    (NonTerminal.Additive_expression_zegond, [NonTerminal.Term_zegond, NonTerminal.D]),
-    (NonTerminal.D, [NonTerminal.Addop, NonTerminal.Term, SemanticRoutine.DO_ADDOP, NonTerminal.D]),
-    (NonTerminal.D, [Terminal.EPSILON]),
-    (NonTerminal.Addop, [Terminal.PLUS, SemanticRoutine.PUSH_PLUS]),
-    (NonTerminal.Addop, [Terminal.MINUS, SemanticRoutine.PUSH_MINUS]),
-    (NonTerminal.Term, [NonTerminal.Signed_factor, NonTerminal.G]),
-    (NonTerminal.Term_prime, [NonTerminal.Signed_factor_prime, NonTerminal.G]),
-    (NonTerminal.Term_zegond, [NonTerminal.Signed_factor_zegond, NonTerminal.G]),
+    (NonTerminal.Additive_expression, [NonTerminal.Term, NonTerminal.D]), #Ok
+    (NonTerminal.Additive_expression_prime, [NonTerminal.Term_prime, NonTerminal.D]), #Ok
+    (NonTerminal.Additive_expression_zegond, [NonTerminal.Term_zegond, NonTerminal.D]), #Ok
+    (NonTerminal.D, [NonTerminal.Addop, NonTerminal.Term, SemanticRoutine.DO_ADDOP, NonTerminal.D]), #Ok
+    (NonTerminal.D, [Terminal.EPSILON]), #Ok
+    (NonTerminal.Addop, [Terminal.PLUS, SemanticRoutine.PUSH_PLUS]), #Ok
+    (NonTerminal.Addop, [Terminal.MINUS, SemanticRoutine.PUSH_MINUS]), #Ok
+    (NonTerminal.Term, [NonTerminal.Signed_factor, NonTerminal.G]), #Ok
+    (NonTerminal.Term_prime, [NonTerminal.Signed_factor_prime, NonTerminal.G]), #Ok
+    (NonTerminal.Term_zegond, [NonTerminal.Signed_factor_zegond, NonTerminal.G]), #Ok
     (NonTerminal.G, [Terminal.STAR, NonTerminal.Signed_factor, SemanticRoutine.DO_MULTIPLY, NonTerminal.G]), # OK
     (NonTerminal.G, [Terminal.EPSILON]), # OK
     (NonTerminal.Signed_factor, [Terminal.PLUS, NonTerminal.Factor]), # OK
     (NonTerminal.Signed_factor, [Terminal.MINUS, NonTerminal.Factor, SemanticRoutine.NEGATE_SS_TOP]), # OK
     (NonTerminal.Signed_factor, [NonTerminal.Factor]), # OK
-    (NonTerminal.Signed_factor_prime, [NonTerminal.Factor_prime]),
+    (NonTerminal.Signed_factor_prime, [NonTerminal.Factor_prime]), #Ok
     (NonTerminal.Signed_factor_zegond, [Terminal.PLUS, NonTerminal.Factor]), # OK
     (NonTerminal.Signed_factor_zegond, [Terminal.MINUS, NonTerminal.Factor, SemanticRoutine.NEGATE_SS_TOP]), # OK
-    (NonTerminal.Signed_factor_zegond, [NonTerminal.Factor_zegond]),
+    (NonTerminal.Signed_factor_zegond, [NonTerminal.Factor_zegond]), #Ok
     (NonTerminal.Factor, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE]), # OK
-    (NonTerminal.Factor, [Terminal.ID, NonTerminal.Var_call_prime]),
+    (NonTerminal.Factor, [Terminal.ID, SemanticRoutine.PID, NonTerminal.Var_call_prime]), #Ok
     (NonTerminal.Factor, [Terminal.NUM, SemanticRoutine.PNUM]), # OK
     (NonTerminal.Var_call_prime, [SemanticRoutine.SA_BEGIN_FUNCTION_CALL, Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_END_FUNCTION_CALL]), # OK
-    (NonTerminal.Var_call_prime, [NonTerminal.Var_prime]),
-    (NonTerminal.Var_prime, [Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE]),
-    (NonTerminal.Var_prime, [Terminal.EPSILON, SemanticRoutine.PID]), # OK
+    (NonTerminal.Var_call_prime, [NonTerminal.Var_prime]), #Ok
+    (NonTerminal.Var_prime, [SemanticRoutine.SA_INDEX_ARRAY, Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, SemanticRoutine.SA_INDEX_ARRAY_POP]), #Ok
+    (NonTerminal.Var_prime, [Terminal.EPSILON]), # OK
     (NonTerminal.Factor_prime, [SemanticRoutine.SA_BEGIN_FUNCTION_CALL, Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_END_FUNCTION_CALL]), # OK
-    (NonTerminal.Factor_prime, [Terminal.EPSILON]),
+    (NonTerminal.Factor_prime, [Terminal.EPSILON]), #Ok
     (NonTerminal.Factor_zegond, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE]), # OK
     (NonTerminal.Factor_zegond, [Terminal.NUM, SemanticRoutine.PNUM]), # OK
     (NonTerminal.Args, [NonTerminal.Arg_list]), # OK

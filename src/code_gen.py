@@ -98,6 +98,7 @@ class CodeGen:
         self.for_break_SS: list[list[int]] = []
         self.pb_list = []
         self.semantic_errors = []
+        self.global_var_initializations = []
 
     def SS_push(self, item):
         self.SS.append(item)
@@ -131,6 +132,13 @@ class CodeGen:
                 # if scope_item.role == ARRAY_ROLE:
                 return scope_item.role == ARRAY_ROLE
         return False
+
+    def _initialize_variable(self, line):
+        if len(self.function_declaration_stack) == 0:
+            self.global_var_initializations.append(line)
+        else:
+            self.PB[self.PB_index] = line
+            self.PB_index += 1
 
     def gettemp(self):
         self.PARAM_COUNTER += 4
@@ -208,8 +216,7 @@ class CodeGen:
 
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         if self.scope_stack[-1].type == INT_TYPE:
-            self.PB[self.PB_index] = ["ASSIGN", "#0", self.PARAM_COUNTER, None]
-            self.PB_index += 1
+            self._initialize_variable(["ASSIGN", "#0", self.PARAM_COUNTER, None])
             self.PARAM_COUNTER += 4
         else:
             self.report_semantic_error(f"Illegal type of void for '{self.scope_stack[-1].name}'.")
@@ -227,8 +234,7 @@ class CodeGen:
         self.PARAM_COUNTER += 4 * n
         self.SS_pop()
         addr = self.scope_stack[-1].memory_address
-        self.PB[self.PB_index] = ["ASSIGN", f"#{addr + 4}", addr, None]
-        self.PB_index += 1
+        self._initialize_variable(["ASSIGN", f"#{addr + 4}", addr, None])
 
     def semantic_routine__sa_param_role_int(self, *args):
         self.scope_stack[-1].role = VAR_ROLE
@@ -246,6 +252,9 @@ class CodeGen:
         self.function_declaration_stack[-1].code_address = self.PB_index
         if  self.function_declaration_stack[-1].name == "main":
             self.PB[JUMP_TO_MAIN_ADDR] = ["JP", self.PB_index, None, None]
+            for line in self.global_var_initializations:
+                self.PB[self.PB_index] = line
+                self.PB_index += 1
 
     def semantic_routine__sa_end_function_statement(self, *args):
         while self.scope_stack[-1] != self.function_declaration_stack[-1]:

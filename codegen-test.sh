@@ -10,7 +10,7 @@ mv ans/input.txt input.txt
 
 python compiler.py
 
-if diff output.txt ans/output.txt; then
+if diff -q output.txt ans/output.txt; then
     echo "$1: OK, outputs are same."
 else
     echo "$1: outputs are different. running interpreter"

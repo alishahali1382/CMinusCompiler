@@ -1,20 +1,24 @@
-int a;
-int b;
+int f(int b){
+	return (b * 2);
+}
 
 void main(void) {
-    int c;
-    int d;
-    void e;
-    int g[5];
-    a = c = 1;
-    d = b = 3;
-    f = 2;
-    c = g;
-    output(a);
-    output(b);
-    c = a * 17 < 15 + 3;
-    output(c);
-    output(d < 3);
-    output(d - 8 < 3);
-    output(1 * 2);
+	int i;
+	int out;
+	int a[10];
+	a[0] = 2;
+	for(i = 2; i < 10; i = i + 2;){
+		int res;
+		res = 0;
+		out = out + i;
+		if (res < 10){
+			output(res);
+		} else {
+			break;
+		} endif
+	}
+	break;
+	output(res);
+	i = a + out;
+	output(f(a));
 }

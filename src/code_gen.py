@@ -1,6 +1,7 @@
 
 import enum
 
+# from termcolor import cprint
 
 class SemanticRoutine(enum.Enum):
     SCOPE_ENTER = "#scope_enter"
@@ -102,6 +103,7 @@ class CodeGen:
     def __init__(self) -> None:
         self.scope_stack = [ScopeItem("output", VOID_TYPE, None, None, FUNC_ROLE, [INT_TYPE])]
         self.PB = [None] * 10000
+        self.comment = [None] * 10000 # for debugging
         self.PB[0] = ["ASSIGN", "#4", SP_ADDR, None] # set the stack pointer to 4
         self.PB_index = JUMP_TO_MAIN_ADDR + 1
         
@@ -183,9 +185,17 @@ class CodeGen:
             SemanticRoutine.SA_FUNCTION_RETURN_JUMP:        self.semantic_routine__sa_function_return_jump,
             SemanticRoutine.SA_FUNCTION_RETURN_VALUE:       self.semantic_routine__sa_function_return_value,
         }
+        debug = (semantic_routine in [SemanticRoutine.FOR, SemanticRoutine.JUMP_FILL, SemanticRoutine.JPF, SemanticRoutine.JPF_SAVE])
+        if debug:
+            from copy import deepcopy
+            checkpoint = deepcopy(self.PB)
         semantic_routines[semantic_routine](*args)
-        # print(" "*50, self.scope_stack)
-        # TODO
+        if debug:
+            for i, item in enumerate(self.PB):
+                if item != checkpoint[i]:
+                    self.comment[i] = f"{semantic_routine}"
+        
+        # cprint(f"{' '*50}{self.PB_index}: {self.SS}", "yellow")
 
 
     # *********************** semantic routine implementations ***********************
@@ -486,7 +496,7 @@ class CodeGen:
         self.PB[self.PB_index] = ["JP", self.SS_top() + 1, None, None]
         self.PB_index += 1
         self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
-        self.SS_pop(3)
+        self.SS_pop(4)
         print(">"*20, self.SS,)
         for p in  self.for_break_SS[-1]:
             self.PB[p] = ["JP", self.PB_index, None, None]

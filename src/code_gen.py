@@ -356,9 +356,11 @@ class CodeGen:
         self.PB[self.PB_index] = ["JP", func_scope_item.code_address, None, None]
         self.PB_index += 1
 
-        # TODO: maybe skip this for VOID_TYPE functions
         t = self.gettemp()
-        self.PB[self.PB_index] = ["ASSIGN", f"{func_scope_item.memory_address+4}", t, None]
+        if func_scope_item.type == INT_TYPE:
+            self.PB[self.PB_index] = ["ASSIGN", f"{func_scope_item.memory_address+4}", t, None]
+        else:
+            self.PB[self.PB_index] = ["ASSIGN", "#0", t, None]
         self.PB_index += 1
         self.SS_pop() # pop the function address
         self.SS_push(t)

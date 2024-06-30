@@ -134,12 +134,13 @@ class CodeGen:
         self.PARAM_COUNTER += 4
         return self.PARAM_COUNTER - 4
 
-    def code_gen(self, semantic_routine: SemanticRoutine, *args):
+    def code_gen(self, semantic_routine: SemanticRoutine, lineno, *args):
         debug = False
         if debug:
             from copy import deepcopy
             checkpoint = deepcopy(self.PB)
 
+        self._lineno = lineno
         self.__getattribute__(f"{str(semantic_routine).replace('#', 'semantic_routine__')}")(*args)
 
         if debug:
@@ -147,14 +148,8 @@ class CodeGen:
                 if item != checkpoint[i]:
                     self.comment[i] = f"{semantic_routine}"
 
-    def report_semantic_error(self, msg, pb_line=None):
-        #print(f"Semantic Error! {msg}")
-        if pb_line is not None and pb_line in self.pb_list:
-            return
-        if pb_line is not None:
-            self.pb_list.append(pb_line)
-            
-        print(msg)
+    def report_semantic_error(self, msg):
+        print(f"{self._lineno} : Semantic Error! {msg}")
 
     # *********************** semantic routine implementations ***********************
 

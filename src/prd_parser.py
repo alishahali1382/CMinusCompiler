@@ -40,14 +40,18 @@ class Parser:
 
         self.codegen = CodeGen()
 
-    def get_lookahead(self):
+    def get_lookahead(self, return_lineno=False):
         if self.eof:
             return None
-        token, _ = self.get_lookahead_token()
+        token, lineno = self.get_lookahead_token()
         token_type = token.token_type
         if token_type in [TokenType.ID, TokenType.NUM, TokenType.EOF]:
-            return Terminal.with_name(token_type.name)
-        return Terminal.from_str(token.token_string)
+            res = Terminal.with_name(token_type.name)
+        else:
+            res = Terminal.from_str(token.token_string)
+        if return_lineno:
+            return res, lineno
+        return res
 
     def get_lookahead_token(self):
         if self.eof:
@@ -99,7 +103,7 @@ class Parser:
             if self.eof:
                 return None
             children = []
-            lookahead = self.get_lookahead()
+            lookahead, lineno = self.get_lookahead(return_lineno=True)
             for i in rule_ids:
                 rhs = self.rules[i][1]
                 if lookahead not in self.predict_sets[i]:
@@ -107,11 +111,11 @@ class Parser:
                 if Terminal.EPSILON in rhs: # we may have action symbols in the rule, while the rule is epsilon
                     for symbol in rhs:
                         if isinstance(symbol, SemanticRoutine):
-                            self.codegen.code_gen(symbol, self.last_token.token_string if self.last_token else None)
+                            self.codegen.code_gen(symbol, lineno, self.last_token.token_string if self.last_token else None)
                     return anytree.Node(str(non_terminal), children=[anytree.Node("epsilon")])
                 for symbol in rhs:
                     if isinstance(symbol, SemanticRoutine):
-                        self.codegen.code_gen(symbol, self.last_token.token_string if self.last_token else None)
+                        self.codegen.code_gen(symbol, lineno, self.last_token.token_string if self.last_token else None)
                     elif isinstance(symbol, NonTerminal):
                         children.append(self.procedures[symbol]())  # Call NonTerminal procedure
                     else:

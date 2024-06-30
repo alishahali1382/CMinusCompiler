@@ -96,6 +96,7 @@ class CodeGen:
         
         self.SS = []
         self.function_call_SS = []
+        self.for_break_SS = []
 
     def SS_push(self, item):
         self.SS.append(item)
@@ -350,8 +351,12 @@ class CodeGen:
         pass
     
     def semantic_routine__check_break_jp_save(self, *args):
-        #TODO
-        pass
+        is_for = len(self.for_break_SS)
+        if is_for < 1:
+            #TODO semantic error
+            print("semantic error: break is out of for.")
+        self.for_break_SS[-1].append(self.PB_index)
+        self.PB_index += 1
     
     def semantic_routine__pop(self, *args):
         self.SS_pop()
@@ -412,6 +417,7 @@ class CodeGen:
         self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
         self.SS_pop(2)
         print(">"*20, self.SS,)
+        self.for_break_SS.append([])
     
     def semantic_routine__for(self, *args):
         print("called for")
@@ -422,16 +428,19 @@ class CodeGen:
         self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
         self.SS_pop(3)
         print(">"*20, self.SS,)
+        for p in  self.for_break_SS[-1]:
+            self.PB[p] = ["JP", self.PB_index, None, None]
+        self.for_break_SS = self.for_break_SS[:-1]
     
     def semantic_routine__sa_retval_and_calee(self, *args):
         #TODO
         pass
     
-    def semantic_routine__sa_index_array(self, **args):
+    def semantic_routine__sa_index_array(self, *args):
         #TODO
         pass
     
-    def semantic_routine__sa_index_array_pop(self, **args):
+    def semantic_routine__sa_index_array_pop(self, *args):
         #TODO
         pass
 

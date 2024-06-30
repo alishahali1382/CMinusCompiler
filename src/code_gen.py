@@ -269,9 +269,12 @@ class CodeGen:
         self.scope_stack[-1].role = ARRAY_ROLE
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         # TODO: do some stuff like array size after ]
-        n = int((self.SS_top()).split("#")[1]) + 1
+        n = int(self.SS_top()[1:]) + 1
         self.PARAM_COUNTER += 4 * n
         self.SS_pop()
+        addr = self.scope_stack[-1].memory_address
+        self.PB[self.PB_index] = ["ASSIGN", f"#{addr + 4}", addr, None]
+        self.PB_index += 1
     
     def semantic_routine__sa_param_role_int(self, *args):
         print("called param_role_int")
@@ -518,7 +521,7 @@ class CodeGen:
         self.PB_index += 1
         self.SS_pop()
         print(">"*20, self.SS,)
-        self.PB[self.PB_index] = ["ADD", "#" + str(self.SS_top()), t, t]
+        self.PB[self.PB_index] = ["ADD", self.SS_top(), t, t]
         self.PB_index += 1
         self.SS_pop()
         print(">"*20, self.SS,)

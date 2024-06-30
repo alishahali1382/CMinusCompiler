@@ -20,13 +20,14 @@ class SemanticRoutine(enum.Enum):
     SA_BEGIN_PARAM = "#sa_begin_param"
     SA_ASSIGN_PARAM = "#sa_assign_param"
     
-    SA_CLOSE_STMT = "#sa_close_stmt"
     SA_CHECK_BREAK_JP_SAVE = "sa_check_break_jp_save"
     
     SA_BEGIN_FUNCTION_CALL = "#sa_begin_function_call"
     SA_END_FUNCTION_CALL = "#sa_end_function_call"
     
+    POP = "#pop"
     SAVE = "#save"
+    LABEL = "#label"
     JPF = "#jpf"
     JPF_SAVE = "#jpf_save"
     JP = "#jp"
@@ -140,9 +141,10 @@ class CodeGen:
             SemanticRoutine.SA_CALEE_WORKS:                 self.semantic_routine__sa_calee_works,
             SemanticRoutine.SA_BEGIN_PARAM:                 self.semantic_routine__sa_begin_param,
             SemanticRoutine.SA_ASSIGN_PARAM:                self.semantic_routine__sa_assign_param,
-            SemanticRoutine.SA_CLOSE_STMT:                  self.semantic_routine__close_stmt,
             SemanticRoutine.SA_CHECK_BREAK_JP_SAVE:         self.semantic_routine__check_break_jp_save,
             SemanticRoutine.SAVE:                           self.semantic_routine__save,
+            SemanticRoutine.POP:                            self.semantic_routine__pop,
+            SemanticRoutine.LABEL:                          self.semantic_routine__label,
             SemanticRoutine.JPF:                            self.semantic_routine__jpf,
             SemanticRoutine.JPF_SAVE:                       self.semantic_routine__jpf_save,
             SemanticRoutine.JP:                             self.semantic_routine__jp,
@@ -325,6 +327,7 @@ class CodeGen:
         self.PB_index += 1
         print(" "*40, self.PB[self.PB_index-1])
         self.SS_pop(1) # NOTE: only pop 1, and the result remains on top of the stack
+        print(">"*20, self.SS,)
 
     def semantic_routine__do_multiply(self, *args):
         print("called do_multiply")
@@ -346,41 +349,79 @@ class CodeGen:
         #TODO
         pass
     
-    def semantic_routine__close_stmt(self, *args):
-        #TODO
-        pass
-    
     def semantic_routine__check_break_jp_save(self, *args):
         #TODO
         pass
     
+    def semantic_routine__pop(self, *args):
+        self.SS_pop()
+    
     def semantic_routine__save(self, *args):
-        #TODO
-        pass
+        print("called save")
+        print(">"*20, self.SS,)
+        self.SS_push(self.PB_index)
+        self.PB_index += 1
+        print(">"*20, self.SS,)
+        
+    def semantic_routine__label(self, *args):
+        print("called label")
+        print(">"*20, self.SS,)
+        self.SS_push(self.PB_index)
+        print(">"*20, self.SS,)
     
     def semantic_routine__jpf(self, *args):
-        #TODO
-        pass
+        print("called jpf")
+        print(">"*20, self.SS,)
+        self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
+        self.SS_pop(2)
+        print(">"*20, self.SS,)
     
     def semantic_routine__jpf_save(self, *args):
-        #TODO
-        pass
+        print("called jpf_save")
+        print(">"*20, self.SS,)
+        self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index + 1, None]
+        self.SS_pop(2)
+        self.SS_push(self.PB_index)
+        self.PB_index += 1
+        print(">"*20, self.SS,)
     
     def semantic_routine__jp(self, *args):
-        #TODO
-        pass
+        print("called jp")
+        print(">"*20, self.SS,)
+        self.PB[self.SS_top()] = ["JP", self.PB_index, None, None]
+        self.SS_pop(1)
+        print(">"*20, self.SS,)
     
     def semantic_routine__save_jump(self, *args):
-        #TODO
-        pass
+        print("called save_jump")
+        print(">"*20, self.SS,)
+        t = self.gettemp()
+        self.PB[self.PB_index] = ["EQ", self.SS_top(), "#0", t]
+        self.SS_push(self.PB_index + 2)
+        self.SS_push(t)
+        self.SS_push(self.PB_index + 1)
+        self.PB_index += 3
+        print(">"*20, self.SS,)
     
     def semantic_routine__jump_fill(self, *args):
-        #TODO
-        pass
+        print("called jump_fill")
+        print(">"*20, self.SS,)
+        self.SS_pop()
+        self.PB[self.PB_index] = ["JP", self.SS_top(4), None, None]
+        self.PB_index += 1
+        self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
+        self.SS_pop(2)
+        print(">"*20, self.SS,)
     
     def semantic_routine__for(self, *args):
-        #TODO
-        pass
+        print("called for")
+        print(">"*20, self.SS,)
+        #self.SS_pop()
+        self.PB[self.PB_index] = ["JP", self.SS_top() + 1, None, None]
+        self.PB_index += 1
+        self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
+        self.SS_pop(3)
+        print(">"*20, self.SS,)
     
     def semantic_routine__sa_retval_and_calee(self, *args):
         #TODO

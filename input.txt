@@ -1,0 +1,15 @@
+/*===== Sample IF =====*/
+void main(void){
+	int m;
+	int n;
+	int i;
+	m = 15;
+	n = 8;
+	i = 0;
+	if(m < n) {
+		m = n;
+		i = 1;
+	} endif
+	output(n + m);
+	output(i);
+}

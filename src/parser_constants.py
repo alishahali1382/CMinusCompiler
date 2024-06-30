@@ -142,13 +142,13 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Statement, [NonTerminal.Selection_stmt]), #Ok
     (NonTerminal.Statement, [NonTerminal.Iteration_stmt]), #Ok
     (NonTerminal.Statement, [NonTerminal.Return_stmt]), #Ok
-    (NonTerminal.Expression_stmt, [NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.SA_CLOSE_STMT]), #OK
+    (NonTerminal.Expression_stmt, [NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.POP]), #OK
     (NonTerminal.Expression_stmt, [SemanticRoutine.SA_CHECK_BREAK_JP_SAVE, Terminal.BREAK, Terminal.SEMICOLON]), #OK
-    (NonTerminal.Expression_stmt, [Terminal.SEMICOLON]), #Ok
+    (NonTerminal.Expression_stmt, [Terminal.SEMICOLON, SemanticRoutine.POP]), #Ok
     (NonTerminal.Selection_stmt, [Terminal.IF, Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SAVE, NonTerminal.Statement, NonTerminal.Else_stmt]),
     (NonTerminal.Else_stmt, [Terminal.ENDIF, SemanticRoutine.JPF]), #Ok
     (NonTerminal.Else_stmt, [Terminal.ELSE, SemanticRoutine.JPF_SAVE, NonTerminal.Statement, Terminal.ENDIF, SemanticRoutine.JP]), #Ok
-    (NonTerminal.Iteration_stmt, [Terminal.FOR, Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.SAVE, NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.SAVE_JUMP, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.JUMP_FILL, NonTerminal.Statement, SemanticRoutine.FOR]), #Ok
+    (NonTerminal.Iteration_stmt, [Terminal.FOR, Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.LABEL, NonTerminal.Expression, Terminal.SEMICOLON, SemanticRoutine.SAVE_JUMP, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.JUMP_FILL, NonTerminal.Statement, SemanticRoutine.FOR]), #Ok
     (NonTerminal.Return_stmt, [Terminal.RETURN, NonTerminal.Return_stmt_prime, SemanticRoutine.SA_RETVIAL_AND_CALEE]), #Ok
     (NonTerminal.Return_stmt_prime, [Terminal.SEMICOLON]), #Ok
     (NonTerminal.Return_stmt_prime, [NonTerminal.Expression, Terminal.SEMICOLON]), #Ok
@@ -190,7 +190,7 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Var_call_prime, [SemanticRoutine.SA_BEGIN_FUNCTION_CALL, Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_END_FUNCTION_CALL]), # OK
     (NonTerminal.Var_call_prime, [NonTerminal.Var_prime]), #Ok
     (NonTerminal.Var_prime, [SemanticRoutine.SA_INDEX_ARRAY, Terminal.BRACKET_OPEN, NonTerminal.Expression, Terminal.BRACKET_CLOSE, SemanticRoutine.SA_INDEX_ARRAY_POP]), #Ok
-    (NonTerminal.Var_prime, [Terminal.EPSILON, SemanticRoutine.PID]), # OK
+    (NonTerminal.Var_prime, [Terminal.EPSILON]), # OK
     (NonTerminal.Factor_prime, [SemanticRoutine.SA_BEGIN_FUNCTION_CALL, Terminal.PARAENTHESIS_OPEN, NonTerminal.Args, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_END_FUNCTION_CALL]), # OK
     (NonTerminal.Factor_prime, [Terminal.EPSILON]), #Ok
     (NonTerminal.Factor_zegond, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Expression, Terminal.PARAENTHESIS_CLOSE]), # OK

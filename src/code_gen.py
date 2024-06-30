@@ -127,7 +127,8 @@ class CodeGen:
         for scope_item in self.scope_stack:
             if scope_item and scope_item.memory_address == address:
                 # print(scope_item, scope_item.role == ARRAY_ROLE)
-                return scope_item.role == ARRAY_ROLE
+                if scope_item.role == ARRAY_ROLE:
+                    return scope_item.role == ARRAY_ROLE
         return False
 
     def gettemp(self):
@@ -319,14 +320,14 @@ class CodeGen:
             if param.role == VAR_ROLE:
                 # print(param.memory_address, self.SS_top())
                 if self._is_array(self.SS_top()):
-                    self.report_semantic_error(f"Mismatch in type of argument {n} for '{func_scope_item.name}'. Expected 'int' but got 'int[]' instead'")
+                    self.report_semantic_error(f"Mismatch in type of argument {n} for '{func_scope_item.name}'. Expected 'int' but got 'array' instead'")
                 self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
                 self.PB_index += 1
             elif param.role == ARRAY_ROLE:
                 print("*"*50)
                 print(self.SS_top())
                 if not self._is_array(self.SS_top()):
-                    self.report_semantic_error(f"Mismatch in type of argument {n} for '{func_scope_item.name}'. Expected 'int[]' but got 'int' instead'")
+                    self.report_semantic_error(f"Mismatch in type of argument {n} for '{func_scope_item.name}'. Expected 'array' but got 'int' instead'")
                 self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
                 self.PB_index += 1
             self.SS_pop()

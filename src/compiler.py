@@ -12,6 +12,9 @@ parser = Parser(grammar_rules)
 parser.parse_and_write()
 
 print("\n")
-for i, line in enumerate(parser.codegen.PB):
-    if line != None:
-        print(f"{i}\t({', '.join((str(x) if x is not None else ' ') for x in line)} )")
+with open("output.txt", "w") as f:
+    for i, line in enumerate(parser.codegen.PB):
+        if line != None:
+            code = f"{i}\t({', '.join((str(x) if x is not None else ' ') for x in line)} )"
+            print(code)
+            f.write(code + "\n")

@@ -303,6 +303,14 @@ class CodeGen:
             self.PB_index += 1
 
         n = len(func_scope_item.params)
+        for i in range(n):
+            if self.SS_top(i) is None or self.SS_top() == func_scope_item.memory_address:
+                self.report_semantic_error(f"Mismatch in numbers of arguments of '{func_scope_item.name}'")
+                return
+        if self.SS_top(n) != func_scope_item.memory_address:
+            self.report_semantic_error(f"Mismatch in numbers of arguments of '{func_scope_item.name}'") 
+            return
+
         for param in func_scope_item.params[::-1]:
             # TODO: check SS_top() type
             if param.role == VAR_ROLE:

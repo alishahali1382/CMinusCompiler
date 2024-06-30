@@ -23,7 +23,7 @@ class SemanticRoutine(enum.Enum):
     SA_FUNCTION_RETURN_VALUE = "#sa_function_return_value"
     SA_FUNCTION_RETURN_JUMP = "#sa_function_return_jump"
     
-    SA_CHECK_BREAK_JP_SAVE = "sa_check_break_jp_save"
+    SA_CHECK_BREAK_JP_SAVE = "#sa_check_break_jp_save"
     
     SA_BEGIN_FUNCTION_CALL = "#sa_begin_function_call"
     SA_END_FUNCTION_CALL = "#sa_end_function_call"
@@ -78,23 +78,7 @@ class ScopeItem:
         self.params: list[ScopeItem] = params
     
     def __repr__(self) -> str:
-        if self.role == VAR_ROLE:
-            if self.type == INT_TYPE:
-                return f"<{self.name} int variable {self.memory_address}>"
-            elif self.type == VOID_TYPE:
-                return f"<{self.name} void variable {self.memory_address}>"
-            elif self.role == ARRAY_ROLE:
-                return f"<{self.name} {self.type} int[] variable {self.memory_address}>"
-            return f"<{self.name} {self.type} variable {self.memory_address}>"
-        elif self.role == FUNC_ROLE:
-            if self.type == INT_TYPE:
-                return f"<{self.name} int function {self.memory_address} {self.code_address}>"
-            elif self.type == VOID_TYPE:
-                return f"<{self.name} void function {self.memory_address} {self.code_address}>"
-            elif self.role == ARRAY_ROLE:
-                return f"<{self.name} {self.type} int[] function {self.memory_address} {self.code_address}>"
-            return f"<{self.name} {self.type} function {self.memory_address} {self.code_address}>"
-        return "<>"
+        return f"<{self.name} {self.type} {self.role} {self.code_address} {self.memory_address}>"
 
 SP_ADDR = 0
 JUMP_TO_MAIN_ADDR = 1
@@ -111,7 +95,7 @@ class CodeGen:
         
         self.SS = []
         self.function_stack: list[ScopeItem] = []
-        self.for_break_SS = []
+        self.for_break_SS: list[list[int]] = []
 
     def SS_push(self, item):
         self.SS.append(item)
@@ -142,104 +126,52 @@ class CodeGen:
         return self.PARAM_COUNTER - 4
 
     def code_gen(self, semantic_routine: SemanticRoutine, *args):
-        # self.__getattribute__(f"semantic_routine__{semantic_routine.name.lower()}")(*args)
-        semantic_routines = {
-            SemanticRoutine.SCOPE_ENTER:                    self.semantic_routine__scope_enter,
-            SemanticRoutine.SCOPE_EXIT:                     self.semantic_routine__scope_exit,
-            SemanticRoutine.SA_TYPE_SPECIFIER_INT:          self.semantic_routine__sa_type_specifier_int,
-            SemanticRoutine.SA_TYPE_SPECIFIER_VOID:         self.semantic_routine__sa_type_specifier_void,
-            SemanticRoutine.SA_BEGIN_DECLERATION:           self.semantic_routine__sa_begin_decleration,
-            SemanticRoutine.SA_ASSIGN_NAME:                 self.semantic_routine__sa_assign_name,
-            SemanticRoutine.SA_DECLERATION_ROLE_FUNCTION:   self.semantic_routine__sa_decleration_role_function,
-            SemanticRoutine.SA_DECLERATION_ROLE_VARIABLE:   self.semantic_routine__sa_decleration_role_variable,
-            SemanticRoutine.SA_DECLERATION_ROLE_ARRAY:      self.semantic_routine__sa_decleration_role_array,
-            SemanticRoutine.SA_BEGIN_FUNCTION_STATEMENT:    self.semantic_routine__sa_begin_function_statement,
-            SemanticRoutine.SA_CHECK_BREAK_JP_SAVE:         self.semantic_routine__check_break_jp_save,
-            SemanticRoutine.SAVE:                           self.semantic_routine__save,
-            SemanticRoutine.POP:                            self.semantic_routine__pop,
-            SemanticRoutine.LABEL:                          self.semantic_routine__label,
-            SemanticRoutine.JPF:                            self.semantic_routine__jpf,
-            SemanticRoutine.JPF_SAVE:                       self.semantic_routine__jpf_save,
-            SemanticRoutine.JP:                             self.semantic_routine__jp,
-            SemanticRoutine.SAVE_JUMP:                      self.semantic_routine__save_jump,
-            SemanticRoutine.JUMP_FILL:                      self.semantic_routine__jump_fill,
-            SemanticRoutine.FOR:                            self.semantic_routine__for,
-            SemanticRoutine.SA_INDEX_ARRAY:                 self.semantic_routine__sa_index_array,
-            SemanticRoutine.SA_INDEX_ARRAY_POP:             self.semantic_routine__sa_index_array_pop,
-            SemanticRoutine.PID:                            self.semantic_routine__pid,
-            SemanticRoutine.PNUM:                           self.semantic_routine__pnum,
-            SemanticRoutine.PUSH_PLUS:                      self.semantic_routine__push_plus,
-            SemanticRoutine.PUSH_MINUS:                     self.semantic_routine__push_minus,
-            SemanticRoutine.NEGATE_SS_TOP:                  self.semantic_routine__negate_ss_top,
-            SemanticRoutine.DO_ADDOP:                       self.semantic_routine__do_addop,
-            SemanticRoutine.PUSH_RELOP_GREATER:             self.semantic_routine__push_relop_greater,
-            SemanticRoutine.PUSH_RELOP_EQUAL:               self.semantic_routine__push_relop_equal,
-            SemanticRoutine.DO_RELOP:                       self.semantic_routine__do_relop,
-            SemanticRoutine.PID_ASSIGN:                     self.semantic_routine__pid_assign,
-            SemanticRoutine.DO_MULTIPLY:                    self.semantic_routine__do_multiply,
-            SemanticRoutine.SA_BEGIN_FUNCTION_CALL:         self.semantic_routine__sa_begin_function_call,
-            SemanticRoutine.SA_END_FUNCTION_CALL:           self.semantic_routine__sa_end_function_call,
-            SemanticRoutine.SA_PARAM_ROLE_INT:              self.semantic_routine__sa_param_role_int,
-            SemanticRoutine.SA_PARAM_ROLE_ARRAY:            self.semantic_routine__sa_param_role_array,
-            SemanticRoutine.SA_END_FUNCTION_STATEMENT:      self.semantic_routine__sa_end_function_statement,
-            SemanticRoutine.SA_FUNCTION_RETURN_JUMP:        self.semantic_routine__sa_function_return_jump,
-            SemanticRoutine.SA_FUNCTION_RETURN_VALUE:       self.semantic_routine__sa_function_return_value,
-        }
-        debug = (semantic_routine in [SemanticRoutine.FOR, SemanticRoutine.JUMP_FILL, SemanticRoutine.JPF, SemanticRoutine.JPF_SAVE])
+        debug = False
         if debug:
             from copy import deepcopy
             checkpoint = deepcopy(self.PB)
-        semantic_routines[semantic_routine](*args)
+
+        self.__getattribute__(f"{str(semantic_routine).replace('#', 'semantic_routine__')}")(*args)
+
         if debug:
             for i, item in enumerate(self.PB):
                 if item != checkpoint[i]:
                     self.comment[i] = f"{semantic_routine}"
-        
-        # cprint(f"{' '*50}{self.PB_index}: {self.SS}", "yellow")
 
 
     # *********************** semantic routine implementations ***********************
 
     def semantic_routine__scope_enter(self, *args):
-        print("called {")
         self.scope_stack.append(None) # a mark for the end of the scope
     
     def semantic_routine__scope_exit(self, *args):
-        print("called }")
         while True:
             scope_item = self.scope_stack.pop()
             if scope_item is None:
                 break
 
     def semantic_routine__pid(self, id, *args):
-        print("called pid", id)
         self.SS_push(self.getaddr(id))
         # TODO
     
     def semantic_routine__pnum(self, num, *args):
-        print("called pnum", num)
         self.SS_push(f"#{num}")
         # TODO
 
     # decleration:
     def semantic_routine__sa_begin_decleration(self, *args):
-        print("called begin_decleration")
         self.scope_stack.append(ScopeItem())
         
     def semantic_routine__sa_type_specifier_int(self, *args):
-        print("called type_specifier_int")
         self.scope_stack[-1].type = INT_TYPE
     
     def semantic_routine__sa_type_specifier_void(self, *args):
-        print("called type_specifier_void")
         self.scope_stack[-1].type = VOID_TYPE
 
     def semantic_routine__sa_assign_name(self, name, *args):
-        print("called assign_name", name)
         self.scope_stack[-1].name = name
 
     def semantic_routine__sa_decleration_role_function(self, *args):
-        print("called decleration_role_function")
         self.scope_stack[-1].role = FUNC_ROLE
         self.scope_stack[-1].params = []
         
@@ -249,11 +181,10 @@ class CodeGen:
         self.function_stack.append(self.scope_stack[-1])
 
         # if self.scope_stack[-1].type == INT_TYPE:
-        if True: # I also leave RETURN_ADDRESS for void functions to match output of testcases
+        if True: # leave RETURN_ADDRESS for void functions to match output of testcases
             self.PARAM_COUNTER += 4 # leave space for the return value, address is FUNCTION.memory_address + 4
     
     def semantic_routine__sa_decleration_role_variable(self, *args):
-        print("called decleration_role_variable")
         self.scope_stack[-1].role = VAR_ROLE
 
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
@@ -265,7 +196,6 @@ class CodeGen:
             print("ERROR: void variable decleration")
 
     def semantic_routine__sa_decleration_role_array(self, *args):
-        print("called decleration_role_array")
         self.scope_stack[-1].role = ARRAY_ROLE
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         # TODO: do some stuff like array size after ]
@@ -277,33 +207,28 @@ class CodeGen:
         self.PB_index += 1
     
     def semantic_routine__sa_param_role_int(self, *args):
-        print("called param_role_int")
         self.scope_stack[-1].role = VAR_ROLE
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         self.PARAM_COUNTER += 4
         self.function_stack[-1].params.append(self.scope_stack[-1])
 
     def semantic_routine__sa_param_role_array(self, *args):
-        print("called param_role_array")
         self.scope_stack[-1].role = ARRAY_ROLE
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         self.PARAM_COUNTER += 4
         self.function_stack[-1].params.append(self.scope_stack[-1])
     
     def semantic_routine__sa_begin_function_statement(self, *args):
-        print("called begin_function_statement")
         self.function_stack[-1].code_address = self.PB_index
         if  self.function_stack[-1].name == "main":
             self.PB[JUMP_TO_MAIN_ADDR] = ["JP", self.PB_index, None, None]
 
     def semantic_routine__sa_end_function_statement(self, *args):
-        print("called end_function_statement")
         while self.scope_stack[-1] != self.function_stack[-1]:
             self.scope_stack.pop()
         self.function_stack.pop()
     
     def semantic_routine__sa_function_return_value(self, *args):
-        print("called function_return")
         if self.function_stack[-1].type == VOID_TYPE:
             print("ERROR: function return type not found")
             return
@@ -312,14 +237,12 @@ class CodeGen:
         self.SS_pop()
 
     def semantic_routine__sa_function_return_jump(self, *args):
-        print("called function_return_jump")
         if self.function_stack[-1].name != "main":
             self.PB[self.PB_index] = ["JP", f"@{self.function_stack[-1].memory_address}", None, None]
             self.PB_index += 1
 
     # function call:
     def semantic_routine__sa_begin_function_call(self, func_name, *args):
-        print("called begin_function_call")
         func_scope_item = self.get_scope_item(func_name)
         if func_scope_item is None:
             print("ERROR: function not found")
@@ -330,7 +253,6 @@ class CodeGen:
         self.function_stack.append(func_scope_item)
 
     def semantic_routine__sa_end_function_call(self, *args):
-        print("called end_function_call")
         func_scope_item = self.function_stack.pop()
         if func_scope_item == self.scope_stack[0]: # handle shadowing the output function
         # if func_scope_item.name == "output":
@@ -346,8 +268,6 @@ class CodeGen:
             elif param.role == ARRAY_ROLE:
                 self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
                 self.PB_index += 1
-                # TODO: fix
-                #raise NotImplementedError("Arrays are not implemented yet")
             self.SS_pop()
 
         self.PB[self.PB_index] = ["ASSIGN", f"#{self.PB_index+2}", f"{func_scope_item.memory_address}", None]
@@ -368,15 +288,12 @@ class CodeGen:
 
     # algebraic:
     def semantic_routine__push_plus(self, *args):
-        print("called push_plus")
         self.SS_push("ADD")
     
     def semantic_routine__push_minus(self, *args):
-        print("called push_minus")
         self.SS_push("SUB")
     
     def semantic_routine__negate_ss_top(self, *args):
-        print("called negate_ss_top")
         if isinstance(self.SS_top(), str) and self.SS_top().startswith("#"):
             self.SS[-1] = f"#{-int(self.SS_top()[1:])}"
             # TODO: remove this if it causes problems
@@ -388,7 +305,6 @@ class CodeGen:
             self.SS_push(t)
 
     def semantic_routine__do_addop(self, *args):
-        print("called do_addop")
         t = self.gettemp()
         self.PB[self.PB_index] = [self.SS_top(1), self.SS_top(2), self.SS_top(), t]
         self.PB_index += 1
@@ -396,15 +312,12 @@ class CodeGen:
         self.SS_push(t)
     
     def semantic_routine__push_relop_greater(self, *args):
-        print("called push_relop_greater")
         self.SS_push("LT")
     
     def semantic_routine__push_relop_equal(self, *args):
-        print("called push_relop_equal")
         self.SS_push("EQ")
     
     def semantic_routine__do_relop(self, *args):
-        print("called do_relop")
         t = self.gettemp()
         self.PB[self.PB_index] = [self.SS_top(1), self.SS_top(2), self.SS_top(), t]
         self.PB_index += 1
@@ -412,7 +325,6 @@ class CodeGen:
         self.SS_push(t)
     
     def semantic_routine__pid_assign(self, *args):
-        print("called pid_assign")
         print(">"*20, self.SS,)
         self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), self.SS_top(1), None]
         self.PB_index += 1
@@ -421,14 +333,13 @@ class CodeGen:
         print(">"*20, self.SS,)
 
     def semantic_routine__do_multiply(self, *args):
-        print("called do_multiply")
         t = self.gettemp()
         self.PB[self.PB_index] = ["MULT", self.SS_top(), self.SS_top(1), t]
         self.PB_index += 1
         self.SS_pop(2)
         self.SS_push(t)
             
-    def semantic_routine__check_break_jp_save(self, *args):
+    def semantic_routine__sa_check_break_jp_save(self, *args):
         is_for = len(self.for_break_SS)
         if is_for < 1:
             #TODO semantic error
@@ -440,27 +351,23 @@ class CodeGen:
         self.SS_pop()
     
     def semantic_routine__save(self, *args):
-        print("called save")
         print(">"*20, self.SS,)
         self.SS_push(self.PB_index)
         self.PB_index += 1
         print(">"*20, self.SS,)
         
     def semantic_routine__label(self, *args):
-        print("called label")
         print(">"*20, self.SS,)
         self.SS_push(self.PB_index)
         print(">"*20, self.SS,)
     
     def semantic_routine__jpf(self, *args):
-        print("called jpf")
         print(">"*20, self.SS,)
         self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
         self.SS_pop(2)
         print(">"*20, self.SS,)
     
     def semantic_routine__jpf_save(self, *args):
-        print("called jpf_save")
         print(">"*20, self.SS,)
         self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index + 1, None]
         self.SS_pop(2)
@@ -469,14 +376,12 @@ class CodeGen:
         print(">"*20, self.SS,)
     
     def semantic_routine__jp(self, *args):
-        print("called jp")
         print(">"*20, self.SS,)
         self.PB[self.SS_top()] = ["JP", self.PB_index, None, None]
         self.SS_pop(1)
         print(">"*20, self.SS,)
     
     def semantic_routine__save_jump(self, *args):
-        print("called save_jump")
         print(">"*20, self.SS,)
         t = self.gettemp()
         self.PB[self.PB_index] = ["EQ", self.SS_top(), "#0", t]
@@ -487,7 +392,6 @@ class CodeGen:
         print(">"*20, self.SS,)
     
     def semantic_routine__jump_fill(self, *args):
-        print("called jump_fill")
         print(">"*20, self.SS,)
         self.SS_pop()
         self.PB[self.PB_index] = ["JP", self.SS_top(4), None, None]
@@ -498,14 +402,10 @@ class CodeGen:
         self.for_break_SS.append([])
     
     def semantic_routine__for(self, *args):
-        print("called for")
-        print(">"*20, self.SS,)
-        #self.SS_pop()
         self.PB[self.PB_index] = ["JP", self.SS_top() + 1, None, None]
         self.PB_index += 1
         self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
         self.SS_pop(4)
-        print(">"*20, self.SS,)
         for p in  self.for_break_SS[-1]:
             self.PB[p] = ["JP", self.PB_index, None, None]
         self.for_break_SS = self.for_break_SS[:-1]
@@ -516,19 +416,12 @@ class CodeGen:
         pass
     
     def semantic_routine__sa_index_array_pop(self,  *args):
-        print("call for index_array_pop")
         t = self.gettemp()
-        print(">"*20, self.SS,)
         self.PB[self.PB_index] = ["MULT", self.SS_top(), "#4", t]
         self.PB_index += 1
         self.SS_pop()
-        print(">"*20, self.SS,)
         self.PB[self.PB_index] = ["ADD", self.SS_top(), t, t]
         self.PB_index += 1
         self.SS_pop()
-        print(">"*20, self.SS,)
         self.SS_push("@" + str(t))
-        print(">"*20, self.SS,)
 
-if __name__ == '__main__':
-    pass

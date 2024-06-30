@@ -109,7 +109,8 @@ class CodeGen:
     def SS_top(self, idx=0):
         """return SS(top-idx)"""
         assert idx>=0, "SS_top only takes positive elements!"
-        return self.SS[-1-idx]
+        res = self.SS[-1-idx]
+        return res[0] if isinstance(res, tuple) else res
 
 
     def get_scope_item(self, name):
@@ -457,11 +458,11 @@ class CodeGen:
         self.SS_pop()
 
     def semantic_routine__save(self, *args):
-        self.SS_push(self.PB_index)
+        self.SS_push((self.PB_index, 'label'))
         self.PB_index += 1
 
     def semantic_routine__label(self, *args):
-        self.SS_push(self.PB_index)
+        self.SS_push((self.PB_index, 'label'))
 
     def semantic_routine__jpf(self, *args):
         self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index, None]
@@ -470,7 +471,7 @@ class CodeGen:
     def semantic_routine__jpf_save(self, *args):
         self.PB[self.SS_top()] = ["JPF", self.SS_top(1), self.PB_index + 1, None]
         self.SS_pop(2)
-        self.SS_push(self.PB_index)
+        self.SS_push((self.PB_index, 'label'))
         self.PB_index += 1
 
     def semantic_routine__jp(self, *args):
@@ -480,9 +481,9 @@ class CodeGen:
     def semantic_routine__save_jump(self, *args):
         t = self.gettemp()
         self.PB[self.PB_index] = ["EQ", self.SS_top(), "#0", t]
-        self.SS_push(self.PB_index + 2)
+        self.SS_push((self.PB_index + 2, 'label'))
         self.SS_push(t)
-        self.SS_push(self.PB_index + 1)
+        self.SS_push((self.PB_index + 1, 'label'))
         self.PB_index += 3
 
     def semantic_routine__jump_fill(self, *args):

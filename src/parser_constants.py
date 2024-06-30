@@ -123,7 +123,7 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_FUNCTION, NonTerminal.Fun_declaration_prime]), # OK
     (NonTerminal.Declaration_prime, [NonTerminal.Var_declaration_prime]), # OK
     (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_VARIABLE, Terminal.SEMICOLON]), # OK
-    (NonTerminal.Var_declaration_prime, [SemanticRoutine.SA_DECLERATION_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.NUM, Terminal.BRACKET_CLOSE, Terminal.SEMICOLON]), # OK
+    (NonTerminal.Var_declaration_prime, [Terminal.BRACKET_OPEN, Terminal.NUM, SemanticRoutine.PNUM, Terminal.BRACKET_CLOSE, SemanticRoutine.SA_DECLERATION_ROLE_ARRAY, Terminal.SEMICOLON]), # OK
     (NonTerminal.Fun_declaration_prime, [Terminal.PARAENTHESIS_OPEN, NonTerminal.Params, Terminal.PARAENTHESIS_CLOSE, SemanticRoutine.SA_BEGIN_FUNCTION_STATEMENT, NonTerminal.Compound_stmt, SemanticRoutine.SA_FUNCTION_RETURN_JUMP, SemanticRoutine.SA_END_FUNCTION_STATEMENT]), # TODO
     (NonTerminal.Type_specifier, [Terminal.INT, SemanticRoutine.SA_TYPE_SPECIFIER_INT]), #Ok
     (NonTerminal.Type_specifier, [Terminal.VOID, SemanticRoutine.SA_TYPE_SPECIFIER_VOID]), #Ok
@@ -132,7 +132,7 @@ grammar_rules: List[GRAMMAR_RULE] = [
     (NonTerminal.Param_list, [Terminal.COMMA, NonTerminal.Param, NonTerminal.Param_list]), #maybe cause duplicate type specifier #TODO
     (NonTerminal.Param_list, [Terminal.EPSILON]), #Ok
     (NonTerminal.Param, [NonTerminal.Declaration_initial, NonTerminal.Param_prime]), #Ok
-    (NonTerminal.Param_prime, [SemanticRoutine.SA_PARAM_ROLE_ARRAY, SemanticRoutine.SA_DECLERATION_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.BRACKET_CLOSE]), #Ok
+    (NonTerminal.Param_prime, [SemanticRoutine.SA_PARAM_ROLE_ARRAY, Terminal.BRACKET_OPEN, Terminal.BRACKET_CLOSE]), #Ok
     (NonTerminal.Param_prime, [Terminal.EPSILON, SemanticRoutine.SA_PARAM_ROLE_INT]), #Ok
     (NonTerminal.Compound_stmt, [SemanticRoutine.SCOPE_ENTER, Terminal.BRACE_OPEN, NonTerminal.Declaration_list, NonTerminal.Statement_list, Terminal.BRACE_CLOSE, SemanticRoutine.SCOPE_EXIT]), #Ok
     (NonTerminal.Statement_list, [NonTerminal.Statement, NonTerminal.Statement_list]), #Ok

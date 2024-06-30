@@ -1,0 +1,10 @@
+/*===== Sample FOR_break =====*/
+void main(void){
+	int m;
+	int n[2];
+	m = 10;
+	n[1] = 8;
+	n[0] = n[1] - 10;
+	output(n[1]);
+	output(n[0]);
+}

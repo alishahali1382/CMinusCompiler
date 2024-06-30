@@ -269,6 +269,9 @@ class CodeGen:
         self.scope_stack[-1].role = ARRAY_ROLE
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         # TODO: do some stuff like array size after ]
+        n = int((self.SS_top()).split("#")[1]) + 1
+        self.PARAM_COUNTER += 4 * n
+        self.SS_pop()
     
     def semantic_routine__sa_param_role_int(self, *args):
         print("called param_role_int")
@@ -338,10 +341,10 @@ class CodeGen:
                 self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
                 self.PB_index += 1
             elif param.role == ARRAY_ROLE:
-                # self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
-                # self.PB_index += 1
+                self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), param.memory_address, None]
+                self.PB_index += 1
                 # TODO: fix
-                raise NotImplementedError("Arrays are not implemented yet")
+                #raise NotImplementedError("Arrays are not implemented yet")
             self.SS_pop()
 
         self.PB[self.PB_index] = ["ASSIGN", f"#{self.PB_index+2}", f"{func_scope_item.memory_address}", None]
@@ -507,9 +510,20 @@ class CodeGen:
         #TODO
         pass
     
-    def semantic_routine__sa_index_array_pop(self, *args):
-        #TODO
-        pass
+    def semantic_routine__sa_index_array_pop(self,  *args):
+        print("call for index_array_pop")
+        t = self.gettemp()
+        print(">"*20, self.SS,)
+        self.PB[self.PB_index] = ["MULT", self.SS_top(), "#4", t]
+        self.PB_index += 1
+        self.SS_pop()
+        print(">"*20, self.SS,)
+        self.PB[self.PB_index] = ["ADD", "#" + str(self.SS_top()), t, t]
+        self.PB_index += 1
+        self.SS_pop()
+        print(">"*20, self.SS,)
+        self.SS_push("@" + str(t))
+        print(">"*20, self.SS,)
 
 if __name__ == '__main__':
     pass

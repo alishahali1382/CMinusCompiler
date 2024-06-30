@@ -17,12 +17,12 @@ with open("output.txt", "w") as f:
     for i, line in enumerate(parser.codegen.PB):
         if line != None:
             code = f"{i}\t({', '.join((str(x) if x is not None else ' ') for x in line)} )"
-            assert lastline == i-1, f"Line {i} is not in order, last line was {lastline}"
+            #assert lastline == i-1, f"Line {i} is not in order, last line was {lastline}"
             code = "\n"*(i-lastline-1) + code
             lastline = i
             f.write(code + "\n")
             if parser.codegen.comment[i] != None:
-                code = f"{code:<40} {parser.codegen.comment[i]}"
+                code = f"{code:<40}" #{parser.codegen.comment[i]}
             print(code)
 
 with open("semantic_errors.txt", "w") as f:

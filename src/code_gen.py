@@ -96,6 +96,7 @@ class CodeGen:
         self.function_call_stack: list[ScopeItem] = []
         self.function_declaration_stack: list[ScopeItem] = []
         self.for_break_SS: list[list[int]] = []
+        self.pb_list = []
 
     def SS_push(self, item):
         self.SS.append(item)
@@ -119,6 +120,8 @@ class CodeGen:
         for scope_item in self.scope_stack[::-1]:
             if scope_item and scope_item.name == name:
                 return scope_item.memory_address
+        lineno = 0 #TODO and adding this for function calls!
+        self.report_semantic_error(f"#{lineno}: Semantic Error! '{name}' is not defined.")
         return None
 
     def _is_array(self, address):
@@ -144,8 +147,14 @@ class CodeGen:
                 if item != checkpoint[i]:
                     self.comment[i] = f"{semantic_routine}"
 
-    def report_semantic_error(self, msg):
-        print(f"Semantic Error! {msg}")
+    def report_semantic_error(self, msg, pb_line=None):
+        #print(f"Semantic Error! {msg}")
+        if pb_line is not None and pb_line in self.pb_list:
+            return
+        if pb_line is not None:
+            self.pb_list.append(pb_line)
+            
+        print(msg)
 
     # *********************** semantic routine implementations ***********************
 
@@ -199,12 +208,19 @@ class CodeGen:
             self.PB_index += 1
             self.PARAM_COUNTER += 4
         else:
-            print("ERROR: void variable decleration")
+            lineno = 0 #TODO
+            self.report_semantic_error(f"#{lineno}: Semantic Error! Illegal type of void for '{self.scope_stack[-1].name}'.")
+            #print("ERROR: void variable decleration")
 
     def semantic_routine__sa_decleration_role_array(self, *args):
         self.scope_stack[-1].role = ARRAY_ROLE
         self.scope_stack[-1].memory_address = self.PARAM_COUNTER
         # TODO: do some stuff like array size after ]
+        
+        if self.scope_stack[-1].type != INT_TYPE:
+            lineno = 0 #TODO
+            self.report_semantic_error(f"#{lineno}: Semantic Error! Illegal type of void for '{self.scope_stack[-1].name}'.")
+            
         n = int(self.SS_top()[1:]) + 1
         self.PARAM_COUNTER += 4 * n
         self.SS_pop()
@@ -350,6 +366,14 @@ class CodeGen:
     def semantic_routine__do_addop(self, *args):
         t = self.gettemp()
         self.PB[self.PB_index] = [self.SS_top(1), self.SS_top(2), self.SS_top(), t]
+        
+        X = self._is_array(self.SS_top(2))
+        Y = self._is_array(self.SS_top())
+        if X is not None and Y is not None:
+            if X != Y:
+                lineno = 0 #TODO
+                self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {X} instead of {Y}.")
+            
         self.PB_index += 1
         self.SS_pop(3)
         self.SS_push(t)
@@ -369,12 +393,29 @@ class CodeGen:
 
     def semantic_routine__pid_assign(self, *args):
         self.PB[self.PB_index] = ["ASSIGN", self.SS_top(), self.SS_top(1), None]
+        
+        Y = self._is_array(self.SS_top())
+        X = self._is_array(self.SS_top(1))
+        if X is not None and Y is not None:
+            if X != Y:
+                lineno = 0 #TODO
+                self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {X} instead of {Y}.")
+        
         self.PB_index += 1
         self.SS_pop(1) # NOTE: only pop 1, and the result remains on top of the stack
 
     def semantic_routine__do_multiply(self, *args):
         t = self.gettemp()
         self.PB[self.PB_index] = ["MULT", self.SS_top(), self.SS_top(1), t]
+        
+        X = self._is_array(self.SS_top())
+        Y = self._is_array(self.SS_top(1))
+        if X is not None and Y is not None:
+            if X != Y:
+                lineno = 0 #TODO
+                self.report_semantic_error(f"#{lineno} : Semantic Error! Type mismatch in operands, Got {X} instead of {Y}.")
+         
+        
         self.PB_index += 1
         self.SS_pop(2)
         self.SS_push(t)
@@ -382,8 +423,10 @@ class CodeGen:
     def semantic_routine__sa_check_break_jp_save(self, *args):
         is_for = len(self.for_break_SS)
         if is_for < 1:
-            #TODO semantic error
-            print("semantic error: break is out of for.")
+            lineno = 0 #TODO
+            self.report_semantic_error(f"#{lineno}: Semantic Error! No 'for' found for 'break'.", self.PB_index)
+            return
+            
         self.for_break_SS[-1].append(self.PB_index)
         self.PB_index += 1
 

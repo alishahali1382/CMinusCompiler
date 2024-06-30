@@ -311,7 +311,10 @@ class CodeGen:
                     break
                 # print(scope_item)
                 save_addresses.append(scope_item.memory_address)
-            
+
+            for addr in self.SS:
+                if isinstance(addr, int) and addr not in save_addresses:
+                    save_addresses.append(addr)
             # print("*"*20, save_addresses)
 
         for addr in save_addresses:

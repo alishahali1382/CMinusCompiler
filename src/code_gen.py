@@ -152,6 +152,7 @@ class CodeGen:
 
     def report_semantic_error(self, msg, pb_add=None):
         if pb_add is not None and pb_add in self.pb_list:
+            self.semantic_errors[-1] = f"#{self._lineno} : Semantic Error! {msg}"
             return
         if pb_add is not None:
             self.pb_list.append(pb_add)

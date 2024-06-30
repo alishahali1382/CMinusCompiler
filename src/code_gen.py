@@ -377,7 +377,7 @@ class CodeGen:
     
     def semantic_routine__negate_ss_top(self, *args):
         print("called negate_ss_top")
-        if isinstance(self.SS_top(), str) and self.SS_top().beginwith("#"):
+        if isinstance(self.SS_top(), str) and self.SS_top().startswith("#"):
             self.SS[-1] = f"#{-int(self.SS_top()[1:])}"
             # TODO: remove this if it causes problems
         else:
